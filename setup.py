@@ -7,5 +7,5 @@ setup(name='gmo_labeler',
       description='GMO labeler using hyperspectral image data and machine/deep learning',
       author='Michael Nagle',
       author_email='michael.nagle@oregonstate.edu',
-      packages=['gmo_labeler', 'pandas', 'numpy'],
-     )
+      packages=['gmo_labeler'],
+      install_requires=['pandas', 'numpy', 'PIL'])
