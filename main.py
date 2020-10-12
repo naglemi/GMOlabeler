@@ -3,7 +3,7 @@ os.chdir('/scratch2/NSF_GWAS/GMOdetectoR/')
 
 import sys
 from PIL import ImageFont
-from PIL import ImageDraw 
+from PIL import ImageDraw
 from PIL import Image
 import math
 import pandas as pd
@@ -42,7 +42,7 @@ def get_row_col_for_grid_item(grid_item_in, grid_type, grid_file = None):
     if(grid_type==12):
         grid_file = pd.read_csv('/scratch2/NSF_GWAS/GMOdetectoR/sections12right.txt',
                                delimiter = '\t')
-        
+
     #print('Grid databse: ')
     #print(grid_file)
     # Column name can't be same as variable name for this to work. Hence naming of variable as grid_item_in
@@ -66,7 +66,7 @@ def determine_explant_position(grid_type,
     #print "Y edges cropped size is " + str(y_edges_cropped_size)
 
     #print "Grid item is " + str(grid_item)
-    
+
     # Calculate size of each grid item
     if(grid_type==20):
         n_rows = 4
@@ -74,7 +74,7 @@ def determine_explant_position(grid_type,
     if(grid_type==12):
         n_rows = 3
         n_cols = 4
-    
+
     if(grid_type!= 12 & grid_type!= 20):
         if(grid_file_path != None):
             stop("Error: Need to provide grid file if not using standard 12 or 20 section grid")
@@ -82,35 +82,35 @@ def determine_explant_position(grid_type,
             grid_file = pd.read_csv(grid_file_path)
             n_rows = grid_file['row'].max
             n_cols = grid_file['col'].max
-            
+
     grid_item_width = x_edges_cropped_size / n_cols
     grid_item_height = y_edges_cropped_size / n_rows
-    
+
     #print "Grid item width is " + str(grid_item_width)
     #print "Grid item height is " + str(grid_item_height)
-    
+
     # Find row and column of desired grid item
     row_col = get_row_col_for_grid_item(grid_item_in = grid_item, grid_type = grid_type)
     row = row_col[0]
     col = row_col[1]
-    
+
     #print "Grid item " + str(grid_item) + " is at row " + str(row) + " and col " + str(col)
-    
+
     # Crop to desired grid item
-    
+
     # The top edge of explant is equal to the overall top edge plus the row-1 times the size of row
     cropped_top_edge = int(top_edge + ((row-1)* grid_item_height))
-    # The bottom edge of explant is equal to the top edge plus the 
+    # The bottom edge of explant is equal to the top edge plus the
     cropped_bottom_edge = int(top_edge + ((row)* grid_item_height))
     # The left edge of explant is equal to the overall left edge plus the col-1 times size of col
     cropped_left_edge = int(left_edge + ((col-1)* grid_item_width))
     cropped_right_edge = int(left_edge + ((col)* grid_item_width))
-                             
+
     #bottom_edge = (bottom_edge - ((row-1)*x_grid_item_size))
     #top_edge = (bottom_edge - (row*x_grid_item_size))
     #left_edge = (left_edge + ((col-1)*y_grid_item_size))
     #right_edge = (left_edge + (col*y_grid_item_size))
-    
+
     return [cropped_left_edge,
             cropped_top_edge,
             cropped_right_edge,
@@ -120,7 +120,7 @@ def determine_explant_position(grid_type,
     #        cropped_top_edge,
     #        cropped_left_edge,
     #        cropped_right_edge]
-    
+
 def load_orient_image(image):
     image = Image.open(image).convert("RGBA")
     image = image.rotate(270, expand=True).transpose(Image.FLIP_LEFT_RIGHT)
@@ -153,15 +153,15 @@ def crop_to_explant(object_to_crop, grid_item, grid_type, mode = 'image', verbos
         if verbose == True:
             print('Cropping to ', explant_coordinates)
         if mode == 'image':
-            
+
             image_cropped = object_to_crop.copy()
 
             image_cropped = image_cropped.crop((explant_coordinates[0], explant_coordinates[1], explant_coordinates[2], explant_coordinates[3]))
 
             return(image_cropped)
-        
+
         if mode == 'CLS':
-        
+
             #print('Segment cropped dim is ' + str(image_cropped.size))
             #segment_array = np.array(segment_cropped)[:,:,0:3]
             #print('Segment array dim is ' + str(segment_array.shape))
@@ -173,9 +173,12 @@ def crop_to_explant(object_to_crop, grid_item, grid_type, mode = 'image', verbos
             CLS_cropped = CLS_cropped[:, ::-1]
             return(CLS_cropped)
 
-        
-def load_CLS_layer(CLS_path,  layer):
-    CLS_data = pd.read_csv(CLS_path)
+
+def load_CLS_layer(CLS_path,  layer, format = 'csv'):
+    if format == 'csv':
+        CLS_data = pd.read_csv(CLS_path)
+    if format == 'hdf':
+        CLS_data = pd.read_csv(CLS_path, key = 'weights')
     CLS_data = CLS_data.sort_values(by=['rows', 'cols'])
     CLS_data = np.asarray(CLS_data[layer]).reshape((CLS_data['rows'].max(),
                                             CLS_data['cols'].max()))
@@ -201,7 +204,7 @@ def CLS_to_image(CLS_matrix, cap, mode = 'opaque', match_size=True, color='white
         if color=='white':
             CLS_matrix_expanded_filled = np.concatenate((CLS_matrix_expanded,
                                                          CLS_matrix_expanded,
-                                                         CLS_matrix_expanded), axis=2).astype(np.uint8)            
+                                                         CLS_matrix_expanded), axis=2).astype(np.uint8)
         if color=='red':
             CLS_matrix_expanded_filled = np.concatenate((CLS_matrix_expanded,
                                                          empty_channel,
@@ -220,16 +223,19 @@ def CLS_to_image(CLS_matrix, cap, mode = 'opaque', match_size=True, color='white
         CLS_matrix_expanded_filled = np.concatenate((CLS_matrix_expanded, blue_red_transparency), axis=2).astype(np.uint8)
     if match_size==True:
         img = img.crop((0, 0, rgb.size[0], rgb.size[1]))
-        
+
     return(img)
 
 
-def load_CLS_layers(CLS_path, layer1, layer2):
+def load_CLS_layers(CLS_path, layer1, layer2, format = 'csv'):
     # Example usage: CLS_data_layer1, CLS_data_layer2 = load_CLS_layers(CLS_path = samples['CLS_data'][15],
     #                                               layer1 = 'Chl',
     #                                               layer2 = 'DsRed')
     print('Loading CLS data from path' + str(CLS_path))
-    CLS_data = pd.read_csv(CLS_path)
+    if format == 'csv':
+        CLS_data = pd.read_csv(CLS_path)
+    if format == 'hdf':
+        CLS_data = pd.read_csv(CLS_path, key = 'weights')
     CLS_data = CLS_data.sort_values(by=['rows', 'cols'])
     CLS_data_layer1 = np.asarray(CLS_data[layer1]).reshape((CLS_data['rows'].max(),
                                             CLS_data['cols'].max()))
@@ -255,7 +261,7 @@ def layers_to_image(CLS_data_layer1, CLS_data_layer2, cap1, cap2, match_size=Tru
                               255)).astype(int)
     CLS_data_layer1 = np.rot90(np.expand_dims(CLS_data_layer1, axis=2))
     blue =  np.zeros((CLS_data_layer1.shape[0], CLS_data_layer1.shape[1], 1), dtype=np.uint8)
-    
+
     CLS_data_layer2[CLS_data_layer2 < 7] = 0
     CLS_data_layer2 = np.interp(CLS_data_layer2,
                              (0,
@@ -264,12 +270,12 @@ def layers_to_image(CLS_data_layer1, CLS_data_layer2, cap1, cap2, match_size=Tru
                              (0,
                               255)).astype(int)
     CLS_data_layer2 = np.rot90(np.expand_dims(CLS_data_layer2, axis=2))
-    
+
     CLS_matrix_expanded_filled = np.concatenate((CLS_data_layer1, CLS_data_layer2, blue), axis=2).astype(np.uint8)
     img = Image.fromarray(CLS_matrix_expanded_filled, 'RGB')
     if match_size==True:
         img = img.crop((0, 0, rgb.size[0], rgb.size[1]))
-        
+
     return(img)
 
 def superimpose_grid(image, grid_type):
@@ -293,20 +299,20 @@ def crop_CLS_matrix(object_to_crop,
                     top_edge,#275,
                     right_edge,# = rgb.size[1],
                     bottom_edge):# = rgb.size[0]):
-        
+
         CLS_cropped = object_to_crop[top_edge:bottom_edge, left_edge:right_edge]
-        
+
         return(CLS_cropped)
-    
+
 def filter_CLS_desired_tissues(CLS_data_in, segment, tissue_hex, tolerance):
-    
+
     #CLS_data = CLS_data_in.copy()
-    
+
     segment_copy = segment.copy()
     segment_array = np.array(segment_copy)[:,:,0:3]
-    
+
     tissue_color_tuple = hex_to_rgb(tissue_hex)
-    
+
     CLS_cropped = crop_CLS_matrix(CLS_data_in,
                                   left_edge = 0,#92,#14,
                                   top_edge = 0,#275,
@@ -366,21 +372,21 @@ def segment_matrix(CLS_object,
     output_line['grid_item'] = grid_item
     output_line['segment_hex'] = tissue_hex
     output_line['intensity_threshold'] = threshold
-    #print('Total pixels ' + str(total_tissue_pixels) + ' for segment ' + tissue_hex)  
+    #print('Total pixels ' + str(total_tissue_pixels) + ' for segment ' + tissue_hex)
     if total_tissue_pixels>1:
         output_line['n_pixels_passing_threshold'] = calculate_pixels_passing_threshold(CLS_data = CLS_filtered, threshold = threshold)
         output_line['mean_signal'] = calculate_mean_signal(CLS_filtered)
         output_line['max_signal'] = calculate_max_signal(CLS_filtered)
         output_line['total_signal'] = calculate_total_signal(CLS_filtered)
-    
+
     if total_tissue_pixels<=1:
         output_line['n_pixels_passing_threshold'] = 'NA'
         output_line['mean_signal'] = 'NA'
         output_line['max_signal'] = 'NA'
         output_line['total_signal'] = 'NA'
-    
+
     output_line['total_pixels'] = total_tissue_pixels
-    
+
     return(output_line, CLS_filtered)
 
 
@@ -396,7 +402,7 @@ def get_concat_v(im1, im2): # Thanks to https://note.nkmk.me/en/python-pillow-co
     dst.paste(im2, (0, im1.height))
     return dst
 
-def main(sample_df_path, grid, threshold, layer, grid_type):
+def main(sample_df_path, grid, threshold, layer, grid_type, format = 'csv'):
 
     pixel_demographics = pd.DataFrame(list(zip(['Shoot', 'Callus', 'Stem', 'Background'],
                                                ['00CC11', '0006CC', 'CC0000', '000000'],
@@ -425,8 +431,9 @@ def main(sample_df_path, grid, threshold, layer, grid_type):
         rgb_gridded = Image.blend(rgb, grid, alpha=0.5)
         #print(plate)
         CLS_data_layer1, CLS_data_layer2 = load_CLS_layers(CLS_path = samples['CLS_data'][plate],
-                                                   layer1 = 'Chl',
-                                                   layer2 = layer)
+        layer1 = 'Chl',
+        layer2 = layer,
+        format = format)
         for grid_item in range(1,grid_type+1):
 
             ##################################################
@@ -509,7 +516,7 @@ def main(sample_df_path, grid, threshold, layer, grid_type):
             both_rows.convert("RGBA").save(output_name)
 
         output_df.to_csv('stats.csv')
-        
+
 if __name__== "__main__":
     #print(sys.argv)
     #print('sys.argv[5] is ' + sys.argv[5])
@@ -517,4 +524,5 @@ if __name__== "__main__":
 	 grid = load_orient_image(sys.argv[2]),
 	 threshold = float(sys.argv[3]),
 	 layer = sys.argv[4],
-	 grid_type = int(sys.argv[5]))
+	 grid_type = int(sys.argv[5],
+     format = int(sys.argv[6])))
