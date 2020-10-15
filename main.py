@@ -237,10 +237,10 @@ def load_CLS_layers(CLS_path, layer1, layer2, format = 'csv'):
     if format == 'hdf':
         CLS_data = pd.read_hdf(CLS_path, key = 'weights')
     CLS_data = CLS_data.sort_values(by=['rows', 'cols'])
-    CLS_data_layer1 = np.asarray(CLS_data[layer1]).reshape((CLS_data['rows'].max(),
-                                            CLS_data['cols'].max()))
-    CLS_data_layer2 = np.asarray(CLS_data[layer2]).reshape((CLS_data['rows'].max(),
-                                            CLS_data['cols'].max()))
+    CLS_data_layer1 = np.asarray(CLS_data[layer1]).reshape((int(CLS_data['rows'].max()),
+                                            int(CLS_data['cols'].max())))
+    CLS_data_layer2 = np.asarray(CLS_data[layer2]).reshape((int(CLS_data['rows'].max()),
+                                            int(CLS_data['cols'].max())))
     CLS_data_layer1 = CLS_data_layer1[:, ::-1]
     CLS_data_layer2 = CLS_data_layer2[:, ::-1]
     return(CLS_data_layer1, CLS_data_layer2)
