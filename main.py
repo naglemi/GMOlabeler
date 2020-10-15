@@ -235,7 +235,7 @@ def load_CLS_layers(CLS_path, layer1, layer2, format = 'csv'):
     if format == 'csv':
         CLS_data = pd.read_csv(CLS_path)
     if format == 'hdf':
-        CLS_data = pd.read_csv(CLS_path, key = 'weights')
+        CLS_data = pd.read_hdf(CLS_path, key = 'weights')
     CLS_data = CLS_data.sort_values(by=['rows', 'cols'])
     CLS_data_layer1 = np.asarray(CLS_data[layer1]).reshape((CLS_data['rows'].max(),
                                             CLS_data['cols'].max()))
@@ -524,5 +524,5 @@ if __name__== "__main__":
 	 grid = load_orient_image(sys.argv[2]),
 	 threshold = float(sys.argv[3]),
 	 layer = sys.argv[4],
-	 grid_type = int(sys.argv[5],
-     format = int(sys.argv[6])))
+	 grid_type = int(sys.argv[5]),
+	 format = str(sys.argv[6]))
