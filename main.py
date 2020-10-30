@@ -1,5 +1,4 @@
 import os
-os.chdir('/scratch2/NSF_GWAS/GMOdetectoR/')
 
 import sys
 from PIL import ImageFont
@@ -402,7 +401,9 @@ def get_concat_v(im1, im2): # Thanks to https://note.nkmk.me/en/python-pillow-co
     dst.paste(im2, (0, im1.height))
     return dst
 
-def main(sample_df_path, grid, threshold, layer, grid_type, format = 'csv'):
+def main(sample_df_path, grid, threshold, layer, grid_type, data_dir, format = 'csv'):
+	
+    os.chdir(data_dir)
 
     pixel_demographics = pd.DataFrame(list(zip(['Shoot', 'Callus', 'Stem', 'Background'],
                                                ['00CC11', '0006CC', 'CC0000', '000000'],
@@ -525,4 +526,5 @@ if __name__== "__main__":
 	 threshold = float(sys.argv[3]),
 	 layer = sys.argv[4],
 	 grid_type = int(sys.argv[5]),
-	 format = str(sys.argv[6]))
+	 format = str(sys.argv[6]),
+	 data_dir = data_dir)
