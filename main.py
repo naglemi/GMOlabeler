@@ -277,7 +277,8 @@ def layers_to_image(CLS_data_layer1, CLS_data_layer2, cap1, cap2, match_size=Tru
 
     return(img)
 
-def superimpose_grid(image, grid_type):
+def superimpose_grid(image, grid_path):
+    # DEPRECATED
     # Usage: image_gridded = superimpose_grid(image_out, grid_type=12)
     if(grid_type==12):
         grid_path = '/scratch2/NSF_GWAS/macroPhor_Array/grids/grids_left_facing_125208_1_0_1_rgb_processed.jpg'
@@ -401,9 +402,7 @@ def get_concat_v(im1, im2): # Thanks to https://note.nkmk.me/en/python-pillow-co
     dst.paste(im2, (0, im1.height))
     return dst
 
-def main(sample_df_path, grid, threshold, layer, grid_type, data_dir, format = 'csv'):
-	
-    os.chdir(data_dir)
+def main(sample_df_path, grid, threshold, layer, grid_type, gmol_dir, format = 'csv'):
 
     pixel_demographics = pd.DataFrame(list(zip(['Shoot', 'Callus', 'Stem', 'Background'],
                                                ['00CC11', '0006CC', 'CC0000', '000000'],
@@ -412,7 +411,7 @@ def main(sample_df_path, grid, threshold, layer, grid_type, data_dir, format = '
 
     job_id = os.path.dirname(sample_df_path.split("/", 4)[4])
 
-    target_directory = '/scratch2/NSF_GWAS/GMOlabeler/output/' + job_id
+    target_directory = gmol_dir + '/output/' + job_id
     os.makedirs(target_directory, exist_ok=True)
     os.chdir(target_directory)
 
@@ -527,4 +526,4 @@ if __name__== "__main__":
 	 layer = sys.argv[4],
 	 grid_type = int(sys.argv[5]),
 	 format = str(sys.argv[6]),
-	 data_dir = data_dir)
+	 gmol_dir = str(sys.argv[7])
