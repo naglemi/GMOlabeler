@@ -1,5 +1,4 @@
 import os
-os.chdir('/scratch2/NSF_GWAS/GMOdetectoR/')
 
 import sys
 from PIL import ImageFont
@@ -34,13 +33,13 @@ def hex_to_rgb(hex_code):
     rgbt_values = tuple(int(hex_code[i:i+2], 16) for i in (0, 2, 4)) + tuple((255,))
     return rgbt_values
 
-def get_row_col_for_grid_item(grid_item_in, grid_type, grid_file = None):
+def get_row_col_for_grid_item(grid_item_in, grid_type, grid_file = None, gmol_dir):
     #print('This grid type is ' + str(grid_type))
     if(grid_type==20):
-        grid_file = pd.read_csv('/scratch2/NSF_GWAS/GMOdetectoR/sections20right.txt',
+        grid_file = pd.read_csv(gmol_dir + '/explant_position_key/sections20right.txt',
                                delimiter = '\t')
     if(grid_type==12):
-        grid_file = pd.read_csv('/scratch2/NSF_GWAS/GMOdetectoR/sections12right.txt',
+        grid_file = pd.read_csv(gmol_dir + '/explant_position_key/sections12right.txt',
                                delimiter = '\t')
 
     #print('Grid databse: ')
@@ -59,7 +58,8 @@ def determine_explant_position(grid_type,
                                left_edge = 14,
                                right_edge = 1406,
                                bottom_edge = 1256,
-                               top_edge = 226):
+                               top_edge = 226,
+			       gmol_dir):
     x_edges_cropped_size = right_edge - left_edge
     #print "X edges cropped size is " + str(x_edges_cropped_size)
     y_edges_cropped_size = bottom_edge - top_edge
@@ -90,7 +90,7 @@ def determine_explant_position(grid_type,
     #print "Grid item height is " + str(grid_item_height)
 
     # Find row and column of desired grid item
-    row_col = get_row_col_for_grid_item(grid_item_in = grid_item, grid_type = grid_type)
+    row_col = get_row_col_for_grid_item(grid_item_in = grid_item, grid_type = grid_type, gmol_dir = gmol_dir)
     row = row_col[0]
     col = row_col[1]
 
@@ -127,7 +127,7 @@ def load_orient_image(image):
     return(image)
 
 
-def crop_to_explant(object_to_crop, grid_item, grid_type, mode = 'image', verbose = False):
+def crop_to_explant(object_to_crop, grid_item, grid_type, mode = 'image', verbose = False, gmol_dir):
         # #for i in range(1,13): # Run this to test cropping
         #    object = crop_to_explant(object_to_crop = rgb, mode = "image", grid_item = i, grid_type=12)
         #    display(object)
@@ -149,7 +149,7 @@ def crop_to_explant(object_to_crop, grid_item, grid_type, mode = 'image', verbos
                                                         top_edge = top_edge,
                                                         right_edge = right_edge,
                                                         bottom_edge = bottom_edge
-                                                        )
+                                                        gmol_dir = gmol_dir)
         if verbose == True:
             print('Cropping to ', explant_coordinates)
         if mode == 'image':
@@ -278,7 +278,8 @@ def layers_to_image(CLS_data_layer1, CLS_data_layer2, cap1, cap2, match_size=Tru
 
     return(img)
 
-def superimpose_grid(image, grid_type):
+def superimpose_grid(image, grid_path):
+    # DEPRECATED
     # Usage: image_gridded = superimpose_grid(image_out, grid_type=12)
     if(grid_type==12):
         grid_path = '/scratch2/NSF_GWAS/macroPhor_Array/grids/grids_left_facing_125208_1_0_1_rgb_processed.jpg'
@@ -402,7 +403,7 @@ def get_concat_v(im1, im2): # Thanks to https://note.nkmk.me/en/python-pillow-co
     dst.paste(im2, (0, im1.height))
     return dst
 
-def main(sample_df_path, grid, threshold, layer, grid_type, format = 'csv'):
+def main(sample_df_path, grid, threshold, layer, grid_type, gmol_dir, format = 'csv'):
 
     pixel_demographics = pd.DataFrame(list(zip(['Shoot', 'Callus', 'Stem', 'Background'],
                                                ['00CC11', '0006CC', 'CC0000', '000000'],
@@ -411,7 +412,7 @@ def main(sample_df_path, grid, threshold, layer, grid_type, format = 'csv'):
 
     job_id = os.path.dirname(sample_df_path.split("/", 4)[4])
 
-    target_directory = '/scratch2/NSF_GWAS/GMOlabeler/output/' + job_id
+    target_directory = gmol_dir + '/output/' + job_id
     os.makedirs(target_directory, exist_ok=True)
     os.chdir(target_directory)
 
@@ -525,4 +526,5 @@ if __name__== "__main__":
 	 threshold = float(sys.argv[3]),
 	 layer = sys.argv[4],
 	 grid_type = int(sys.argv[5]),
-	 format = str(sys.argv[6]))
+	 format = str(sys.argv[6]),
+	 gmol_dir = str(sys.argv[7]))
