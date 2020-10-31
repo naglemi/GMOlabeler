@@ -10,14 +10,20 @@ option_list = list(
   make_option(c("-d", "--datapath"),
               type="character",
               default=NULL,
-              help="data output from GMOlabeleR",
-              metavar="character"));
+              help="data output from GMOlabeler",
+              metavar="character"),
+  make_option(c("-o", "--output_dir"),
+              type="character",
+              default=NULL,
+              help="Output directory with results for GMOlabeler",
+              metavar="character")
+);
 
 opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser);
 
 #datapath <- "T16_DEV_genes/EA/wk7/"
-datapath <- paste0("/scratch2/NSF_GWAS/GMOlabeler/output/", opt$datapath, "stats.csv")
+datapath <- paste0(opt$output_dir, opt$datapath, "stats.csv")
 output <-fread(datapath)
 
 #### First do for all segments, combine all
