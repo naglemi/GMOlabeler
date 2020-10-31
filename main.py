@@ -58,7 +58,8 @@ def determine_explant_position(grid_type,
                                left_edge = 14,
                                right_edge = 1406,
                                bottom_edge = 1256,
-                               top_edge = 226):
+                               top_edge = 226,
+			       gmol_dir):
     x_edges_cropped_size = right_edge - left_edge
     #print "X edges cropped size is " + str(x_edges_cropped_size)
     y_edges_cropped_size = bottom_edge - top_edge
@@ -89,7 +90,7 @@ def determine_explant_position(grid_type,
     #print "Grid item height is " + str(grid_item_height)
 
     # Find row and column of desired grid item
-    row_col = get_row_col_for_grid_item(grid_item_in = grid_item, grid_type = grid_type)
+    row_col = get_row_col_for_grid_item(grid_item_in = grid_item, grid_type = grid_type, gmol_dir = gmol_dir)
     row = row_col[0]
     col = row_col[1]
 
