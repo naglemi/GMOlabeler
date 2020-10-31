@@ -90,7 +90,10 @@ def determine_explant_position(grid_type,
     #print "Grid item height is " + str(grid_item_height)
 
     # Find row and column of desired grid item
-    row_col = get_row_col_for_grid_item(grid_item_in = grid_item, grid_type = grid_type, gmol_dir = gmol_dir)
+    row_col = get_row_col_for_grid_item(grid_item_in = grid_item,
+    grid_type = grid_type,
+    gmol_dir = gmol_dir)
+    
     row = row_col[0]
     col = row_col[1]
 
@@ -144,12 +147,15 @@ def crop_to_explant(object_to_crop, grid_item, grid_type, gmol_dir, mode = 'imag
             right_edge = 1262
             bottom_edge = 1200
 
-        explant_coordinates = determine_explant_position(grid_type = grid_type, grid_item = grid_item, # Not sure why I need -1
-                                                        left_edge = left_edge,#14,
-                                                        top_edge = top_edge,
-                                                        right_edge = right_edge,
-                                                        bottom_edge = bottom_edge
-                                                        gmol_dir = gmol_dir)
+        explant_coordinates = determine_explant_position(
+        grid_type = grid_type,
+        grid_item = grid_item, # Not sure why I need -1
+        left_edge = left_edge,#14,
+        top_edge = top_edge,
+        right_edge = right_edge,
+        bottom_edge = bottom_edge,
+        gmol_dir = gmol_dir)
+
         if verbose == True:
             print('Cropping to ', explant_coordinates)
         if mode == 'image':
