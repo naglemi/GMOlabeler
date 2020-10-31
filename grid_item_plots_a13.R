@@ -1,6 +1,6 @@
 library(data.table)
 library(scales)
-library(GMOdetectoR)
+#library(GMOdetectoR)
 library(readxl)
 library(ggplot2)
 library(randomcoloR)
