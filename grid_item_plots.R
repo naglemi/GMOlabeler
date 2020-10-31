@@ -6,6 +6,7 @@ library(ggplot2)
 library(randomcoloR)
 library(optparse)
 library(tools)
+library(stringr)
 
 
 # Read arguments from command line  ---------------------------------------
