@@ -5,6 +5,7 @@ library(readxl)
 library(ggplot2)
 library(randomcoloR)
 library(optparse)
+library(tools)
 
 
 # Read arguments from command line  ---------------------------------------
