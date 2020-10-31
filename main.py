@@ -444,23 +444,28 @@ def main(sample_df_path, grid, threshold, layer, grid_type, gmol_dir, format = '
             rgb_cropped = crop_to_explant(object_to_crop = rgb,
                                               grid_item = grid_item,
                                               grid_type = grid_type,
-                                              mode = 'image')
+                                              mode = 'image',
+					      gmol_dir = gmol_dir)
             rgb_gridded_cropped = crop_to_explant(object_to_crop = rgb_gridded,
                                               grid_item = grid_item,
                                               grid_type = grid_type,
-                                              mode = 'image')
+                                              mode = 'image',
+					      gmol_dir = gmol_dir)
             segment_cropped = crop_to_explant(object_to_crop = segment,
                                               grid_item = grid_item,
                                               grid_type = grid_type,
-                                              mode = 'image')
+                                              mode = 'image',
+					      gmol_dir = gmol_dir)
             CLS_cropped1 = crop_to_explant(object_to_crop = CLS_data_layer1,
                                               grid_item = grid_item,
                                               grid_type = grid_type,
-                                              mode = 'CLS')
+                                              mode = 'CLS',
+					      gmol_dir = gmol_dir)
             CLS_cropped2 = crop_to_explant(object_to_crop = CLS_data_layer2,
                                               grid_item = grid_item,
                                               grid_type = grid_type,
-                                              mode = 'CLS')
+                                              mode = 'CLS',
+					      gmol_dir = gmol_dir)
 
             ##################################################
             ####### PREPARE SOME HYPERSPECTRAL IMAGES ########
