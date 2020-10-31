@@ -127,7 +127,7 @@ def load_orient_image(image):
     return(image)
 
 
-def crop_to_explant(object_to_crop, grid_item, grid_type, mode = 'image', verbose = False):
+def crop_to_explant(object_to_crop, grid_item, grid_type, mode = 'image', verbose = False, gmol_dir):
         # #for i in range(1,13): # Run this to test cropping
         #    object = crop_to_explant(object_to_crop = rgb, mode = "image", grid_item = i, grid_type=12)
         #    display(object)
@@ -149,7 +149,7 @@ def crop_to_explant(object_to_crop, grid_item, grid_type, mode = 'image', verbos
                                                         top_edge = top_edge,
                                                         right_edge = right_edge,
                                                         bottom_edge = bottom_edge
-                                                        )
+                                                        gmol_dir = gmol_dir)
         if verbose == True:
             print('Cropping to ', explant_coordinates)
         if mode == 'image':
