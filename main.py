@@ -526,4 +526,4 @@ if __name__== "__main__":
 	 layer = sys.argv[4],
 	 grid_type = int(sys.argv[5]),
 	 format = str(sys.argv[6]),
-	 gmol_dir = str(sys.argv[7])
+	 gmol_dir = str(sys.argv[7]))
