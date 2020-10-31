@@ -33,13 +33,13 @@ def hex_to_rgb(hex_code):
     rgbt_values = tuple(int(hex_code[i:i+2], 16) for i in (0, 2, 4)) + tuple((255,))
     return rgbt_values
 
-def get_row_col_for_grid_item(grid_item_in, grid_type, grid_file = None):
+def get_row_col_for_grid_item(grid_item_in, grid_type, grid_file = None, gmol_dir):
     #print('This grid type is ' + str(grid_type))
     if(grid_type==20):
-        grid_file = pd.read_csv('/scratch2/NSF_GWAS/GMOdetectoR/sections20right.txt',
+        grid_file = pd.read_csv(gmol_dir + '/explant_position_key/sections20right.txt',
                                delimiter = '\t')
     if(grid_type==12):
-        grid_file = pd.read_csv('/scratch2/NSF_GWAS/GMOdetectoR/sections12right.txt',
+        grid_file = pd.read_csv(gmol_dir + '/explant_position_key/sections12right.txt',
                                delimiter = '\t')
 
     #print('Grid databse: ')
