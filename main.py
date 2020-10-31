@@ -33,7 +33,7 @@ def hex_to_rgb(hex_code):
     rgbt_values = tuple(int(hex_code[i:i+2], 16) for i in (0, 2, 4)) + tuple((255,))
     return rgbt_values
 
-def get_row_col_for_grid_item(grid_item_in, grid_type, grid_file = None, gmol_dir):
+def get_row_col_for_grid_item(grid_item_in, grid_type, gmol_dir, grid_file = None):
     #print('This grid type is ' + str(grid_type))
     if(grid_type==20):
         grid_file = pd.read_csv(gmol_dir + '/explant_position_key/sections20right.txt',
@@ -54,12 +54,12 @@ def get_row_col_for_grid_item(grid_item_in, grid_type, grid_file = None, gmol_di
 
 def determine_explant_position(grid_type,
                                grid_item,
+			       gmol_dir,
                                grid_file_path = None,
                                left_edge = 14,
                                right_edge = 1406,
                                bottom_edge = 1256,
-                               top_edge = 226,
-			       gmol_dir):
+                               top_edge = 226):
     x_edges_cropped_size = right_edge - left_edge
     #print "X edges cropped size is " + str(x_edges_cropped_size)
     y_edges_cropped_size = bottom_edge - top_edge
@@ -127,7 +127,7 @@ def load_orient_image(image):
     return(image)
 
 
-def crop_to_explant(object_to_crop, grid_item, grid_type, mode = 'image', verbose = False, gmol_dir):
+def crop_to_explant(object_to_crop, grid_item, grid_type, gmol_dir, mode = 'image', verbose = False:
         # #for i in range(1,13): # Run this to test cropping
         #    object = crop_to_explant(object_to_crop = rgb, mode = "image", grid_item = i, grid_type=12)
         #    display(object)
