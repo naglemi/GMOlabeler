@@ -1374,11 +1374,21 @@ cat("\n")
 combined_data$Genotype_ID <- as.factor(combined_data$Genotype_ID)
 
 for(i in 1:(nrow(pixel_demographics)-1)){
+  print(paste0("Making final plots for tissue: "))
+  print(pixel_demographics[i, ])
+  print("Dim before and after subsetting combined data to this tissue only")
+  print(dim(combined_data))
   data_subset <- combined_data[which(combined_data$segment_hex == pixel_demographics$Tissue[i]),]
   print(dim(data_subset))
-  
+  print("Max mean_signal")
+  print(max(na.omit(data_subset$mean_signal)))
+  if (is.infinite(max(na.omit(data_subset$mean_signal)))){
+    next
+}
+
   if(pixel_demographics$Tissue[i]!="All_regenerated_tissue" & pixel_demographics$Tissue[i]!="All_tissue"){
     # We do not have means calculated for these.
+    print("Mean signal plots")
     p1 <- ggplot(data_subset, aes(x=`Treatment name`, y=mean_signal, group=`Treatment name`)) + 
       geom_boxplot(outlier.shape=NA,
                    fill=randomColor(luminosity=c("bright")),
@@ -1398,6 +1408,7 @@ for(i in 1:(nrow(pixel_demographics)-1)){
       stat_summary(fun.y=mean, geom="point") +
       ggtitle(paste0("Mean reporter signal in ", pixel_demographics$Tissue[i])) +
       scale_y_continuous(labels = scales::scientific)
+    print("Finished making mean signal plot... Now to save and make the rest.")
     print(p1)
     
     ggsave(
@@ -1405,6 +1416,7 @@ for(i in 1:(nrow(pixel_demographics)-1)){
         plot = last_plot(),   width = plot_horz_in,   height = opt$height,   units = "in")
   }
 
+  print("Max signal plots")
   
   p2 <- ggplot(data_subset, aes(x=`Treatment name`, y=max_signal, group=`Treatment name`)) + 
     geom_boxplot(outlier.shape=NA,
@@ -1431,6 +1443,8 @@ for(i in 1:(nrow(pixel_demographics)-1)){
     paste0("B",i,"_", pixel_demographics$Tissue[i],"_Max_signal.png"),
       plot = last_plot(),   width = plot_horz_in,   height = opt$height,   units = "in")
   
+  print("Total signal plots")
+
   p3 <- ggplot(data_subset, aes(x=`Treatment name`, y=total_signal, group=`Treatment name`)) + 
     geom_boxplot(outlier.shape=NA,
                  fill=randomColor(luminosity=c("bright")),
