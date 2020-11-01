@@ -479,11 +479,11 @@ def main(sample_df_path, grid, threshold, layer, grid_type, gmol_dir, format = '
 
             pseudo_fluor = layers_to_image(CLS_data_layer1 = CLS_cropped1,#CLS_data_layer1,
                                   CLS_data_layer2 = CLS_cropped2,#CLS_data_layer2,
-                                  cap1 = 40,
-                                  cap2 = 10,
+                                  cap1 = 200,
+                                  cap2 = 400,
                                   match_size = False)
             bw_fluor = CLS_to_image(CLS_matrix = CLS_cropped2,
-                                     cap = 10,
+                                     cap = 400,
                                      match_size=False)
 
             ##################################################
@@ -522,7 +522,7 @@ def main(sample_df_path, grid, threshold, layer, grid_type, gmol_dir, format = '
                 reporter_channel_combined = get_concat_h(reporter_channel_combined, segment_dictionary[key])
             both_rows = get_concat_v(top_row, reporter_channel_combined)
             #display(both_rows)
-            output_name = segment_filename.split("/")[-1].replace('_segment_uncropped_processed.jpg',
+            output_name = segment_filename.split("/")[-1].replace('_segment_uncropped_processed.png',
                                                           ('_gridspot'+str(grid_item)+'.png'))
             #print('Saving ' + str(output_name))
             both_rows.convert("RGBA").save(output_name)
