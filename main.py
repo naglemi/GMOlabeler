@@ -130,22 +130,30 @@ def load_orient_image(image):
     return(image)
 
 
-def crop_to_explant(object_to_crop, grid_item, grid_type, gmol_dir, mode = 'image', verbose = False):
+def crop_to_explant(object_to_crop, grid_item, grid_type, gmol_dir, mode = 'image', verbose = False, grid_borders = None):
         # #for i in range(1,13): # Run this to test cropping
         #    object = crop_to_explant(object_to_crop = rgb, mode = "image", grid_item = i, grid_type=12)
         #    display(object)
+	
+	if 'grid_borders' not in locals() and 'grid_borders' not in globals():
 
-        if grid_type == 20:
-            left_edge = 14
-            right_edge = 1406
-            bottom_edge = 1256
-            top_edge = 226
+	        if grid_type == 20:
+			left_edge = 14
+			right_edge = 1406
+            		bottom_edge = 1256
+            		top_edge = 226
 
-        if grid_type == 12:
-            left_edge = 92
-            top_edge = 275
-            right_edge = 1262
-            bottom_edge = 1200
+        	if grid_type == 12:
+            		left_edge = 92
+            		top_edge = 275
+            		right_edge = 1262
+            		bottom_edge = 1200
+
+	else:
+		left_edge = grid_borders[0]
+		right_edge = grid_borders[1]
+		bottom_edge = grid_borders[2]
+		top_edge = grid_borders[3]
 
         explant_coordinates = determine_explant_position(
         grid_type = grid_type,
@@ -448,7 +456,7 @@ def main(sample_df_path, grid, threshold, layer, grid_type, gmol_dir, format = '
             ##################################################
 
             rgb_cropped = crop_to_explant(object_to_crop = rgb,
-                                              grid_item = grid_item,
+					  grid_item = grid_item,
                                               grid_type = grid_type,
                                               mode = 'image',
                                               gmol_dir = gmol_dir)
