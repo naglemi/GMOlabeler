@@ -552,4 +552,4 @@ if __name__== "__main__":
 	 grid_type = int(sys.argv[5]),
 	 format = str(sys.argv[6]),
 	 gmol_dir = str(sys.argv[7]),
-	 grid_borders = sys.argv[8])
+	 grid_borders = tuple(sys.argv[8].split()))
