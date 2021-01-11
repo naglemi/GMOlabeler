@@ -93,7 +93,7 @@ def determine_explant_position(grid_type,
     row_col = get_row_col_for_grid_item(grid_item_in = grid_item,
     grid_type = grid_type,
     gmol_dir = gmol_dir)
-    
+
     row = row_col[0]
     col = row_col[1]
 
@@ -134,7 +134,7 @@ def crop_to_explant(object_to_crop, grid_item, grid_type, gmol_dir, mode = 'imag
         # #for i in range(1,13): # Run this to test cropping
         #    object = crop_to_explant(object_to_crop = rgb, mode = "image", grid_item = i, grid_type=12)
         #    display(object)
-	
+
 	if 'grid_borders' not in locals() and 'grid_borders' not in globals():
 
             if grid_type == 20:
@@ -546,10 +546,10 @@ if __name__== "__main__":
     #print(sys.argv)
     #print('sys.argv[5] is ' + sys.argv[5])
     main(sample_df_path = sys.argv[1],
-	 grid = load_orient_image(sys.argv[2]),
-	 threshold = float(sys.argv[3]),
-	 layer = sys.argv[4],
-	 grid_type = int(sys.argv[5]),
-	 format = str(sys.argv[6]),
-	 gmol_dir = str(sys.argv[7]),
-	 grid_borders = tuple(sys.argv[8].split()))
+         grid = load_orient_image(sys.argv[2]),
+         threshold = float(sys.argv[3]),
+         layer = sys.argv[4],
+         grid_type = int(sys.argv[5]),
+         format = str(sys.argv[6]),
+         gmol_dir = str(sys.argv[7]),
+         grid_borders = tuple(sys.argv[8].split()))
