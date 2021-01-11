@@ -150,10 +150,10 @@ def crop_to_explant(object_to_crop, grid_item, grid_type, gmol_dir, mode = 'imag
             bottom_edge = 1200
 
     else:
-        left_edge = grid_borders[0]
-        right_edge = grid_borders[1]
-        bottom_edge = grid_borders[2]
-        top_edge = grid_borders[3]
+        left_edge = int(grid_borders[0])
+        right_edge = int(grid_borders[1])
+        bottom_edge = int(grid_borders[2])
+        top_edge = int(grid_borders[3])
 
     explant_coordinates = determine_explant_position(
     grid_type = grid_type,
