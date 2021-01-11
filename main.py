@@ -137,23 +137,23 @@ def crop_to_explant(object_to_crop, grid_item, grid_type, gmol_dir, mode = 'imag
 	
 	if 'grid_borders' not in locals() and 'grid_borders' not in globals():
 
-	        if grid_type == 20:
-			left_edge = 14
-			right_edge = 1406
-            		bottom_edge = 1256
-            		top_edge = 226
+            if grid_type == 20:
+                left_edge = 14
+                right_edge = 1406
+                bottom_edge = 1256
+                top_edge = 226
 
-        	if grid_type == 12:
-            		left_edge = 92
-            		top_edge = 275
-            		right_edge = 1262
-            		bottom_edge = 1200
+            if grid_type == 12:
+                left_edge = 92
+                top_edge = 275
+                right_edge = 1262
+                bottom_edge = 1200
 
-	else:
-		left_edge = grid_borders[0]
-		right_edge = grid_borders[1]
-		bottom_edge = grid_borders[2]
-		top_edge = grid_borders[3]
+        else:
+                left_edge = grid_borders[0]
+                right_edge = grid_borders[1]
+                bottom_edge = grid_borders[2]
+                top_edge = grid_borders[3]
 
         explant_coordinates = determine_explant_position(
         grid_type = grid_type,
@@ -417,7 +417,7 @@ def get_concat_v(im1, im2): # Thanks to https://note.nkmk.me/en/python-pillow-co
     dst.paste(im2, (0, im1.height))
     return dst
 
-def main(sample_df_path, grid, threshold, layer, grid_type, gmol_dir, format = 'csv'):
+def main(sample_df_path, grid, threshold, layer, grid_type, gmol_dir, format = 'csv', grid_borders = None):
 
     pixel_demographics = pd.DataFrame(list(zip(['Shoot', 'Callus', 'Stem', 'Background'],
                                                ['00CC11', '0006CC', 'CC0000', '000000'],
@@ -456,30 +456,35 @@ def main(sample_df_path, grid, threshold, layer, grid_type, gmol_dir, format = '
             ##################################################
 
             rgb_cropped = crop_to_explant(object_to_crop = rgb,
-					  grid_item = grid_item,
-                                              grid_type = grid_type,
-                                              mode = 'image',
-                                              gmol_dir = gmol_dir)
+                                          grid_item = grid_item,
+                                          grid_type = grid_type,
+                                          mode = 'image',
+                                          gmol_dir = gmol_dir,
+					  grid_borders = grid_borders)
             rgb_gridded_cropped = crop_to_explant(object_to_crop = rgb_gridded,
-                                              grid_item = grid_item,
-                                              grid_type = grid_type,
-                                              mode = 'image',
-                                              gmol_dir = gmol_dir)
+                                                  grid_item = grid_item,
+                                                  grid_type = grid_type,
+                                                  mode = 'image',
+                                                  gmol_dir = gmol_dir,
+					          grid_borders = grid_borders)
             segment_cropped = crop_to_explant(object_to_crop = segment,
                                               grid_item = grid_item,
                                               grid_type = grid_type,
                                               mode = 'image',
-                                              gmol_dir = gmol_dir)
+                                              gmol_dir = gmol_dir,
+					      grid_borders = grid_borders)
             CLS_cropped1 = crop_to_explant(object_to_crop = CLS_data_layer1,
-                                              grid_item = grid_item,
-                                              grid_type = grid_type,
-                                              mode = 'CLS',
-                                              gmol_dir = gmol_dir)
+                                           grid_item = grid_item,
+                                           grid_type = grid_type,
+                                           mode = 'CLS',
+                                           gmol_dir = gmol_dir,
+					   grid_borders = grid_borders)
             CLS_cropped2 = crop_to_explant(object_to_crop = CLS_data_layer2,
-                                              grid_item = grid_item,
-                                              grid_type = grid_type,
-                                              mode = 'CLS',
-                                              gmol_dir = gmol_dir)
+                                           grid_item = grid_item,
+                                           grid_type = grid_type,
+                                           mode = 'CLS',
+                                           gmol_dir = gmol_dir,
+					   grid_borders = grid_borders)
 
             ##################################################
             ####### PREPARE SOME HYPERSPECTRAL IMAGES ########
@@ -546,4 +551,5 @@ if __name__== "__main__":
 	 layer = sys.argv[4],
 	 grid_type = int(sys.argv[5]),
 	 format = str(sys.argv[6]),
-	 gmol_dir = str(sys.argv[7]))
+	 gmol_dir = str(sys.argv[7]),
+	 grid_borders = sys.argv[8])
