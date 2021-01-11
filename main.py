@@ -54,7 +54,7 @@ def get_row_col_for_grid_item(grid_item_in, grid_type, gmol_dir, grid_file = Non
 
 def determine_explant_position(grid_type,
                                grid_item,
-			       gmol_dir,
+                               gmol_dir,
                                grid_file_path = None,
                                left_edge = 14,
                                right_edge = 1406,
@@ -135,57 +135,57 @@ def crop_to_explant(object_to_crop, grid_item, grid_type, gmol_dir, mode = 'imag
         #    object = crop_to_explant(object_to_crop = rgb, mode = "image", grid_item = i, grid_type=12)
         #    display(object)
 
-	if 'grid_borders' not in locals() and 'grid_borders' not in globals():
+    if 'grid_borders' not in locals() and 'grid_borders' not in globals():
 
-            if grid_type == 20:
-                left_edge = 14
-                right_edge = 1406
-                bottom_edge = 1256
-                top_edge = 226
+        if grid_type == 20:
+            left_edge = 14
+            right_edge = 1406
+            bottom_edge = 1256
+            top_edge = 226
 
-            if grid_type == 12:
-                left_edge = 92
-                top_edge = 275
-                right_edge = 1262
-                bottom_edge = 1200
+        if grid_type == 12:
+            left_edge = 92
+            top_edge = 275
+            right_edge = 1262
+            bottom_edge = 1200
 
-        else:
-                left_edge = grid_borders[0]
-                right_edge = grid_borders[1]
-                bottom_edge = grid_borders[2]
-                top_edge = grid_borders[3]
+    else:
+        left_edge = grid_borders[0]
+        right_edge = grid_borders[1]
+        bottom_edge = grid_borders[2]
+        top_edge = grid_borders[3]
 
-        explant_coordinates = determine_explant_position(
-        grid_type = grid_type,
-        grid_item = grid_item, # Not sure why I need -1
-        left_edge = left_edge,#14,
-        top_edge = top_edge,
-        right_edge = right_edge,
-        bottom_edge = bottom_edge,
-        gmol_dir = gmol_dir)
+    explant_coordinates = determine_explant_position(
+    grid_type = grid_type,
+    grid_item = grid_item, # Not sure why I need -1
+    left_edge = left_edge,#14,
+    top_edge = top_edge,
+    right_edge = right_edge,
+    bottom_edge = bottom_edge,
+    gmol_dir = gmol_dir)
 
-        if verbose == True:
-            print('Cropping to ', explant_coordinates)
-        if mode == 'image':
+    if verbose == True:
+        print('Cropping to ', explant_coordinates)
+    if mode == 'image':
 
-            image_cropped = object_to_crop.copy()
+        image_cropped = object_to_crop.copy()
 
-            image_cropped = image_cropped.crop((explant_coordinates[0], explant_coordinates[1], explant_coordinates[2], explant_coordinates[3]))
+        image_cropped = image_cropped.crop((explant_coordinates[0], explant_coordinates[1], explant_coordinates[2], explant_coordinates[3]))
 
-            return(image_cropped)
+        return(image_cropped)
 
-        if mode == 'CLS':
+    if mode == 'CLS':
 
-            #print('Segment cropped dim is ' + str(image_cropped.size))
-            #segment_array = np.array(segment_cropped)[:,:,0:3]
-            #print('Segment array dim is ' + str(segment_array.shape))
-            #MSE_cropped = np.sum(np.square(np.subtract(segment_array, tissue_color_tuple[0:3])), axis=2).transpose((1, 0))
-            object_to_crop = object_to_crop[:, ::-1]
-            CLS_cropped = object_to_crop[explant_coordinates[0]:explant_coordinates[2], explant_coordinates[1]:explant_coordinates[3]]
-            #CLS_cropped = object_to_crop[explant_coordinates[1]:explant_coordinates[3], explant_coordinates[0]:explant_coordinates[2]]
-            object_to_crop = object_to_crop[:, ::-1]
-            CLS_cropped = CLS_cropped[:, ::-1]
-            return(CLS_cropped)
+        #print('Segment cropped dim is ' + str(image_cropped.size))
+        #segment_array = np.array(segment_cropped)[:,:,0:3]
+        #print('Segment array dim is ' + str(segment_array.shape))
+        #MSE_cropped = np.sum(np.square(np.subtract(segment_array, tissue_color_tuple[0:3])), axis=2).transpose((1, 0))
+        object_to_crop = object_to_crop[:, ::-1]
+        CLS_cropped = object_to_crop[explant_coordinates[0]:explant_coordinates[2], explant_coordinates[1]:explant_coordinates[3]]
+        #CLS_cropped = object_to_crop[explant_coordinates[1]:explant_coordinates[3], explant_coordinates[0]:explant_coordinates[2]]
+        object_to_crop = object_to_crop[:, ::-1]
+        CLS_cropped = CLS_cropped[:, ::-1]
+        return(CLS_cropped)
 
 
 def load_CLS_layer(CLS_path,  layer, format = 'csv'):
@@ -315,9 +315,9 @@ def crop_CLS_matrix(object_to_crop,
                     right_edge,# = rgb.size[1],
                     bottom_edge):# = rgb.size[0]):
 
-        CLS_cropped = object_to_crop[top_edge:bottom_edge, left_edge:right_edge]
+    CLS_cropped = object_to_crop[top_edge:bottom_edge, left_edge:right_edge]
 
-        return(CLS_cropped)
+    return(CLS_cropped)
 
 def filter_CLS_desired_tissues(CLS_data_in, segment, tissue_hex, tolerance):
 
@@ -460,31 +460,31 @@ def main(sample_df_path, grid, threshold, layer, grid_type, gmol_dir, format = '
                                           grid_type = grid_type,
                                           mode = 'image',
                                           gmol_dir = gmol_dir,
-					  grid_borders = grid_borders)
+                                          grid_borders = grid_borders)
             rgb_gridded_cropped = crop_to_explant(object_to_crop = rgb_gridded,
                                                   grid_item = grid_item,
                                                   grid_type = grid_type,
                                                   mode = 'image',
                                                   gmol_dir = gmol_dir,
-					          grid_borders = grid_borders)
+                                                  grid_borders = grid_borders)
             segment_cropped = crop_to_explant(object_to_crop = segment,
                                               grid_item = grid_item,
                                               grid_type = grid_type,
                                               mode = 'image',
                                               gmol_dir = gmol_dir,
-					      grid_borders = grid_borders)
+                                              grid_borders = grid_borders)
             CLS_cropped1 = crop_to_explant(object_to_crop = CLS_data_layer1,
                                            grid_item = grid_item,
                                            grid_type = grid_type,
                                            mode = 'CLS',
                                            gmol_dir = gmol_dir,
-					   grid_borders = grid_borders)
+                                           grid_borders = grid_borders)
             CLS_cropped2 = crop_to_explant(object_to_crop = CLS_data_layer2,
                                            grid_item = grid_item,
                                            grid_type = grid_type,
                                            mode = 'CLS',
                                            gmol_dir = gmol_dir,
-					   grid_borders = grid_borders)
+                                           grid_borders = grid_borders)
 
             ##################################################
             ####### PREPARE SOME HYPERSPECTRAL IMAGES ########
