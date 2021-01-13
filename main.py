@@ -148,7 +148,7 @@ def crop_to_explant(object_to_crop, grid_item, grid_type, gmol_dir, mode = 'imag
             top_edge = 275
             right_edge = 1262
             bottom_edge = 1200
-
+# "309 1251 1284 129"
     else:
         left_edge = int(grid_borders[0])
         right_edge = int(grid_borders[1])
