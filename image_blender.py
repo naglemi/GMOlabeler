@@ -27,7 +27,7 @@ def main(wd, alpha, mode, rotate, angle, chroma_standard_prefix = 'hroma', verbo
         if verbose == True:
             print('Building composite for image ' + rgb_paths[i])
         segment_img = Image.open(segmentation_output_paths[i]).convert("RGBA").rotate(180)
-        rgb_img = Image.open(rgb_paths[i]).convert("RGBA").rotate(270)
+        rgb_img = Image.open(rgb_paths[i]).convert("RGBA").rotate(180)
     
         if rotate == True:
             rgb_img = rgb_img.rotate(angle)
