@@ -67,10 +67,12 @@ option_list = list(
 opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser);
 
-#setwd("/scratch2/NSF_GWAS/GMOlabeler/")
+
 
 ### IF DEBUGGING IN RSTUDIO, UNCOMMENT THIS LINE INSTEAD OF USING OptParser
-#opt <- readRDS("/scratch2/NSF_GWAS/GMOlabeler/plots/GREGSCORNER/GFP_717_353/Day5//gridplot_args.rds")
+#opt <- readRDS("/home/labgroup/code/GMOlabeler/plots/Elements_9/Transformation/FAB_Dev_Genes/wk10/Fluorescent/gridplot_args.rds")
+### THIS ONE TOO
+#setwd("/home/labgroup/code/GMOlabeler/")
 
 # Import and preprocess data ----------------------------------------------
 
@@ -673,6 +675,8 @@ print(nrow(randomization_datasheet))
 print("How many rows in randomization datasheet with portion_Callus data?")
 print(nrow(randomization_datasheet[!is.na(randomization_datasheet$portion_Callus),]))
 
+print(table(randomization_datasheet$Genotype_ID, randomization_datasheet$`Treatment name`))
+
 ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_Callus, group=`Treatment name`)) + 
   geom_boxplot(outlier.shape=NA,
                fill=randomColor(luminosity=c("bright")),
@@ -680,7 +684,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_Callus, group=
                alpha=0.2) +
   scale_y_continuous(labels = function(x) paste0(x*100, "%")) +
   ylab("Grid positions with callus") +
-  theme_dark() +
+  theme_dark() + 
   geom_jitter(width=0.50, height=0.001, size = 1) +
   facet_grid(~`Genotype_ID`) +
   #stat_summary(fun.y=mean, geom="line", aes(group=1))  + 
@@ -691,7 +695,6 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_Callus, group=
         axis.title.y = element_text(size = rel(1.3)),
         strip.text = element_text(angle = angle, size=rel(1.3)),
         plot.title = element_text(size=rel(1.7))) +
-  geom_jitter(width=0.050, height=0, size = 1) +
   ggtitle("Rates of callus regeneration (including escapes)")#+
 #scale_y_continuous(labels = scales::scientific)
 
@@ -720,7 +723,6 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_transgenic_Cal
         axis.title.y = element_text(size = rel(1.3)),
         strip.text = element_text(angle = angle, size=rel(1.3)),
         plot.title = element_text(size=rel(1.7))) +
-  #geom_jitter(width=0.050, height=0, size = 1) +
   ggtitle("Rates of transgenic callus regeneration")#+
 #scale_y_continuous(labels = scales::scientific)library(randomcoloR)
 
@@ -748,7 +750,6 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_Shoot, group=`
         axis.title.y = element_text(size = rel(1.3)),
         strip.text = element_text(angle = angle, size=rel(1.3)),
         plot.title = element_text(size=rel(1.7))) +
-  geom_jitter(width=0.050, height=0, size = 1) +
   ggtitle("Rates of Shoot regeneration (including escapes)")#+
 #scale_y_continuous(labels = scales::scientific)
 
@@ -827,7 +828,6 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_transgenic_All
         axis.title.y = element_text(size = rel(1.3)),
         strip.text = element_text(angle = angle, size=rel(1.3)),
         plot.title = element_text(size=rel(1.7))) +
-  geom_jitter(width=0.050, height=0, size = 1) +
   ggtitle("Rates of reporter expression in callus or shoot")#+
 #scale_y_continuous(labels = scales::scientific)library(randomcoloR)
 
