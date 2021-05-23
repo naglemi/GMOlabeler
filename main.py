@@ -388,13 +388,17 @@ def segment_matrix(CLS_object,
     output_line['segment_hex'] = tissue_hex
     output_line['intensity_threshold'] = threshold
     #print('Total pixels ' + str(total_tissue_pixels) + ' for segment ' + tissue_hex)
-    if total_tissue_pixels>1:
+    
+    # Starting 5.23.21, because of a rare case when ~2 pixels are in a class and neither have signal, producing "Error!" No CLS error
+    #  We will increase this past 1, up to 3
+    
+    if total_tissue_pixels>3:
         output_line['n_pixels_passing_threshold'] = calculate_pixels_passing_threshold(CLS_data = CLS_filtered, threshold = threshold)
         output_line['mean_signal'] = calculate_mean_signal(CLS_filtered)
         output_line['max_signal'] = calculate_max_signal(CLS_filtered)
         output_line['total_signal'] = calculate_total_signal(CLS_filtered)
 
-    if total_tissue_pixels<=1:
+    if total_tissue_pixels<=3:
         output_line['n_pixels_passing_threshold'] = 'NA'
         output_line['mean_signal'] = 'NA'
         output_line['max_signal'] = 'NA'
