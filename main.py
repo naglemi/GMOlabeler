@@ -520,7 +520,7 @@ def main(sample_df_path, grid, threshold, layer, grid_type, gmol_dir, format = '
                                                        tissue_hex = tissue_hex,
                                                        threshold = threshold)
                 segment_signal = CLS_to_image(CLS_matrix = CLS_filtered,
-                                     cap = 10,
+                                     cap = 400,
                                      match_size=False,
                                      color = color)
                 segment_dictionary[tissue] = segment_signal
