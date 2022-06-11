@@ -23,6 +23,14 @@ option_list = list(
               default=NULL,
               help="path to randomization datasheet",
               metavar="character"),
+  make_option(c("-S", "--samples-pre-labeling"),
+              type="character",
+              default=NULL,
+              help=paste0("path to output from pre_label.R, used again here to",
+              "filter out",
+              " from missing explant data plates that were imaged twice or more",
+              " by removing all images except the last from analysis."),
+              metavar="character"),
   make_option(c("-p", "--pixel_threshold"),
               type="numeric",
               default=5,
@@ -62,23 +70,34 @@ option_list = list(
               type="numeric",
               default=-9,
               help="Plot width (inches)",
-              metavar="numeric"));
+              metavar="numeric"),
+  make_option(c("-R", "--Reporter"),
+	      type="character",
+	      default="",
+	      help=paste0("Specify reporter so when running with multiple reporters, ",
+			  "results for each are collected and saved separately."),
+	      metavar="character"))
 
 opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser);
 
-
-
 ### IF DEBUGGING IN RSTUDIO, UNCOMMENT THIS LINE INSTEAD OF USING OptParser
-#opt <- readRDS("/home/labgroup/code/GMOlabeler/plots/Elements_9/Transformation/FAB_Dev_Genes/wk10/Fluorescent/gridplot_args.rds")
+#opt <- readRDS("/home/michael/GMOlabeler/plots/Nathan_GRF/Nathan_GRF_12_2021/717_1xCWT_GRF/week_3/gridplot_args.rds")
+#opt <- readRDS("/home/michael/GMOlabeler/plots/Greg_transformations/CGC/717_C58_wk6/GFP/gridplot_args.rds")
+
+#opt <- readRDS("/home/michael/GMOlabeler/plots/GWAS_CRISPR/CRIA/wk7/GFP/gridplot_args.rds")
+# opt$randomization_datasheet_path <- gsub("Elements_14", "Elements_14/Elements_14", opt$randomization_datasheet_path)
+# opt$`samples-pre-labeling` <- gsub("Elements_14", "Elements_14/Elements_14", opt$`samples-pre-labeling`)
+# opt$MissingList <- gsub("Elements_14", "Elements_14/Elements_14", opt$MissingList)
+
 ### THIS ONE TOO
-#setwd("/home/labgroup/code/GMOlabeler/")
+#setwd("/home/michael/GMOlabeler/")
 
 # Import and preprocess data ----------------------------------------------
 
 rundir <- getwd()
 
-wd <- paste0(rundir, "/plots/", opt$datapath1)
+wd <- paste0(rundir, "/plots/", opt$datapath1, "/", opt$Reporter, "/")
 if(!dir.exists(wd)) dir.create(wd, recursive = TRUE)
 setwd(wd)
 
@@ -87,7 +106,7 @@ print(paste0("Saving list of input arguments to : ", arg_out_path))
 saveRDS(opt, file = arg_out_path)
 
 #datapath <- paste0("/scratch2/NSF_GWAS/GMOlabeler/output/", opt$datapath1, "stats.csv")
-datapath <- paste0(rundir, "/output/", opt$datapath1, "stats_with_sums_over_tissues.csv")
+datapath <- paste0(rundir, "/output/", opt$datapath1, opt$Reporter, "/stats_with_sums_over_tissues.csv")
 #randomization_datasheet_path <- "/scratch2/NSF_GWAS/macroPhor_Array/T16_DEV_genes/EA_randomized.xlsx"
 print(paste0("Reading in output from GMOlabeler at path: ", datapath))
 
@@ -97,6 +116,7 @@ pixel_demographics = data.frame(cbind(c('Shoot', 'Callus', 'Stem', 'All_tissue',
 colnames(pixel_demographics) <- c('Tissue', 'hex_code', 'color')
 
 output <- fread(datapath)
+output <- output[which(!is.na(grid_item)), ]
 cat("\n")
 print(paste0("Rows in output from GMOlabeler: ", nrow(output)))
 
@@ -119,6 +139,18 @@ if(opt$missing==TRUE){
                                 header=TRUE,
 				colClasses=c("character")) # this should be specified explicitly to stop columns from being read as numeric when missing data comes from score data
   #print("preparing to pivot missing explant data table")
+  
+  # Need to exclude missing explant data for non-final imags of plates that
+  #  were re-imaged.
+  
+  samples_pre_label <- fread(opt$`samples-pre-labeling`)
+  nonredundant_rgb_list <- basename(
+    gsub("_processed", "", samples_pre_label$rgb))
+  
+  missing_explant_data <- missing_explant_data[which(
+    missing_explant_data$image_name %in% nonredundant_rgb_list), ]
+  
+  
   missing_explant_data_tidy <- pivot_longer(data= missing_explant_data,
                                             cols = colnames(missing_explant_data)[-1],
                                             names_to = "grid_item",
@@ -161,6 +193,9 @@ if(opt$missing==TRUE){
   cat("\n")
   print(paste0("Before merging the GMOlabeler and missing output data, they have rows of ",
         nrow(output), " and ", nrow(missing_explant_data_tidy), " respectively."))
+  
+
+  
   output <- merge(x = output,
                   y = missing_explant_data_tidy,
                   by = c("filename", "grid_item"),
@@ -199,87 +234,98 @@ cat("\n")
 print("Afer processing GMOlabeler output to merge with missing explant data, Head of data (w/ first 5 col): ")
 output[1:5,1:5]
 
-for(i in 1:nrow(output)){
-  #' Given macroPhor Array output filename, parse out tray and plate IDs
-  #'
-  #' @param filename for macroPhor Array output, with file naming as used in Strauss Lab
-  #'
-  #' @return A character string with tray ID and plate ID delimited by "_"
-  #' @export
-  #'
-  #' @examples
-  parse_trayplateID <- function(name_being_parsed){
-    pass_to_dodge_error <- name_being_parsed
-    imgpath_stripped <- file_path_sans_ext(basename(pass_to_dodge_error))
-    trayID <- str_split_fixed(imgpath_stripped, "_", 2)[1]
-    
-    assign_ID_index_from_row_column_on_tray <- function(data_to_parse = filename, components_list, mode="table", verbose=FALSE){
-      dictionary <- cbind(c(0,0,0,0,0,0,0,
-                            1,1,1,1,1,1,1,
-                            2,2,2,2,2,2,2),
-                          c(0,1,2,3,4,5,6,
-                            0,1,2,3,4,5,6,
-                            0,1,2,3,4,5,6),
-                          c(1:21))
-      dictionary <- as.data.table(dictionary)
-      colnames(dictionary) <- c("row", "column", "ID")
-      # Get the ID of position in tray in according to row and column
-      dictionary$row_column <- paste0(dictionary$row, "_", dictionary$column)
-      dictionary[,1:2] <- NULL
-      if(mode=="table"){
-        # Set colnames for spectral components if multiple are same
-        #colnames(data_to_parse)[1:length(components_list)] <- components_list
-        data_merged <- merge(data_to_parse, dictionary, by="row_column", all.x = TRUE, all.y = TRUE)
-        return(data_merged)
-      }
-      if(mode=="filename"){
-        
-        # Patch added in v0.19 for compatibility regardless of whether "_cyan" is at end of filename
-        if(grepl("cyan", data_to_parse)==1){
-          ndelimiters=9
-        }else{
-          ndelimiters=8
-        }
-        
-        row <- str_split_fixed(basename(file_path_sans_ext(data_to_parse)), "_", 9)[ndelimiters-1]
-        # Changed in v0.19 along with patch above
-        col <- str_split_fixed(basename(file_path_sans_ext(data_to_parse)), "_", ndelimiters)[ndelimiters]
-        row_col <- paste0(row, "_", col)
-        ID <- dictionary[which(dictionary$row_column == row_col),]$ID
-        # Debugging lines added in v0.19
-        if(verbose==TRUE){
-          print(paste0("This row is ", row))
-          print(paste0("This col is ", col))
-          print(paste0("This row_col is ", row_col))
-          print(paste0("This filename (stripped) is ", basename(file_path_sans_ext(data_to_parse))))
-          print(paste0("This ID about to be returned from assign_ID_index_from_roW_column_on_tray is ", ID))
-        }
-        
-        return(ID)
-      }
+#' Given macroPhor Array output filename, parse out tray and plate IDs
+#'
+#' @param filename for macroPhor Array output, with file naming as used in Strauss Lab
+#'
+#' @return A character string with tray ID and plate ID delimited by "_"
+#' @export
+#'
+#' @examples
+parse_trayplateID <- function(name_being_parsed){
+  pass_to_dodge_error <- name_being_parsed
+  imgpath_stripped <- file_path_sans_ext(basename(pass_to_dodge_error))
+  trayID <- str_split_fixed(imgpath_stripped, "_", 2)[1]
+  
+  assign_ID_index_from_row_column_on_tray <- function(data_to_parse = filename, components_list, mode="table", verbose=FALSE){
+    dictionary <- cbind(c(0,0,0,0,0,0,0,
+                          1,1,1,1,1,1,1,
+                          2,2,2,2,2,2,2),
+                        c(0,1,2,3,4,5,6,
+                          0,1,2,3,4,5,6,
+                          0,1,2,3,4,5,6),
+                        c(1:21))
+    dictionary <- as.data.table(dictionary)
+    colnames(dictionary) <- c("row", "column", "ID")
+    # Get the ID of position in tray in according to row and column
+    dictionary$row_column <- paste0(dictionary$row, "_", dictionary$column)
+    dictionary[,1:2] <- NULL
+    if(mode=="table"){
+      # Set colnames for spectral components if multiple are same
+      #colnames(data_to_parse)[1:length(components_list)] <- components_list
+      data_merged <- merge(data_to_parse, dictionary, by="row_column", all.x = TRUE, all.y = TRUE)
+      return(data_merged)
     }
-    
-    plateID <- assign_ID_index_from_row_column_on_tray(data_to_parse = imgpath_stripped, mode="filename")
-    trayplateID <- paste0(trayID, "_", plateID)
-    return(trayplateID)
+    if(mode=="filename"){
+      
+      # Patch added in v0.19 for compatibility regardless of whether "_cyan" is at end of filename
+      if(grepl("cyan", data_to_parse)==1){
+        ndelimiters=9
+      }else{
+        ndelimiters=8
+      }
+      
+      row <- str_split_fixed(basename(file_path_sans_ext(data_to_parse)), "_", 9)[ndelimiters-1]
+      # Changed in v0.19 along with patch above
+      col <- str_split_fixed(basename(file_path_sans_ext(data_to_parse)), "_", ndelimiters)[ndelimiters]
+      row_col <- paste0(row, "_", col)
+      ID <- dictionary[which(dictionary$row_column == row_col),]$ID
+      # Debugging lines added in v0.19
+      if(verbose==TRUE){
+        print(paste0("This row is ", row))
+        print(paste0("This col is ", col))
+        print(paste0("This row_col is ", row_col))
+        print(paste0("This filename (stripped) is ", basename(file_path_sans_ext(data_to_parse))))
+        print(paste0("This ID about to be returned from assign_ID_index_from_roW_column_on_tray is ", ID))
+      }
+      
+      return(ID)
+    }
   }
+  
+  plateID <- assign_ID_index_from_row_column_on_tray(data_to_parse = imgpath_stripped, mode="filename")
+  trayplateID <- paste0(trayID, "_", plateID)
+  return(trayplateID)
+}
+
+for(i in 1:nrow(output)){
+
+
   output$ID[i] <- parse_trayplateID(name_being_parsed = output$filename[i])
 }
 
 
 # Read randomization datasheet, clean if needed ---------------------------
 
-
-randomization_datasheet <- read_excel(opt$randomization_datasheet_path)
+if(grepl("\\.csv", opt$randomization_datasheet_path)){
+  randomization_datasheet <- fread(opt$randomization_datasheet_path)
+}
+if(grepl("\\.xls", opt$randomization_datasheet_path)){
+  randomization_datasheet <- as.data.table(
+    read_excel(opt$randomization_datasheet_path))
+}
 
 # If there are leaf explants, note that we can only analyze stem explants in the current version
 if (sum(grepl('Tissue type', colnames(randomization_datasheet))) >= 1){
-  message("Warning! This dataset contains multiple explant types. We will only analyze stem explants.")
+  message("Warning! This dataset contains multiple explant types. We will only analyze stem/petiole explants.")
   print("Randomization datasheet contains levels of tissue type: ")
   print(levels(factor(randomization_datasheet$`Tissue type`)))
   print(paste0("Nrow before subsetting to stem only: ", nrow(randomization_datasheet)))
-  randomization_datasheet <- randomization_datasheet[which(randomization_datasheet$`Tissue type` == "S"), ]
-  print(paste0("Nrow after subsetting to stem only: ", nrow(randomization_datasheet)))
+  randomization_datasheet <- randomization_datasheet[which(
+    randomization_datasheet$`Tissue type` == "S" | 
+    randomization_datasheet$`Tissue type` == "P" |
+    randomization_datasheet$`Tissue type` == "S/P"), ]
+  print(paste0("Nrow after subsetting to stem/petiole only: ", nrow(randomization_datasheet)))
 }
 
 colnames(randomization_datasheet) <- gsub("total_explants", "total_explants_from_master_data", colnames(randomization_datasheet))
@@ -457,24 +503,35 @@ print(head(IDs_to_drop))
 print(colnames(output))
 #stop()
 
+if(sum(is.na(randomization_datasheet$filename)) ==
+   length(randomization_datasheet$filename)){
+  stop("Error: NA for all file names. Do the tray IDs on the randomization datasheet match the filenames of images?")
+}
+
 # Calculate transgenic ----------------------------------------------------
 
 ## First calculate all transgenic
 # Initialize new columns
 for (j in 1:nrow(pixel_demographics)){
     new_column_name <- paste0('n_transgenic_', pixel_demographics$Tissue[j])
-    randomization_datasheet <- cbind(randomization_datasheet, rep(NA, nrow(randomization_datasheet)))
+    randomization_datasheet <- cbind(randomization_datasheet,
+                                     as.numeric(rep(NA, nrow(randomization_datasheet))))
     colnames(randomization_datasheet)[ncol(randomization_datasheet)] <- new_column_name
     
     new_column_name <- paste0('portion_transgenic_', pixel_demographics$Tissue[j])
-    randomization_datasheet <- cbind(randomization_datasheet, rep(NA, nrow(randomization_datasheet)))
+    randomization_datasheet <- cbind(randomization_datasheet,
+                                     as.numeric(rep(NA, nrow(randomization_datasheet))))
     colnames(randomization_datasheet)[ncol(randomization_datasheet)] <- new_column_name
 }
 
 for (i in 1:nrow(randomization_datasheet)){
     for (j in 1:nrow(pixel_demographics)){
-        column_of_interest <- paste0('n_transgenic_', pixel_demographics$Tissue[j])
-        total_transgenic <- sum(na.omit(output$transgenic[which(output$ID==randomization_datasheet$ID[i] & output$segment_hex == pixel_demographics$Tissue[j])]))
+        column_of_interest <- paste0('n_transgenic_',
+                                     pixel_demographics$Tissue[j])
+        
+        total_transgenic <- sum(na.omit(output$transgenic[which(
+          output$ID==randomization_datasheet$ID[i] & 
+            output$segment_hex == pixel_demographics$Tissue[j])]))
         # print(paste0('Total transgenic explants on plate ',
         #             randomization_datasheet$ID[i],
         #             ' and tissue ',
@@ -483,8 +540,14 @@ for (i in 1:nrow(randomization_datasheet)){
         #             total_transgenic))
         randomization_datasheet[i, eval(column_of_interest)] <- total_transgenic 
         
-        column_of_interest <- paste0('portion_transgenic_', pixel_demographics$Tissue[j])
-        total_transgenic <- sum(na.omit(output$transgenic[which(output$ID==randomization_datasheet$ID[i] & output$segment_hex == pixel_demographics$Tissue[j])]))
+        column_of_interest <- paste0('portion_transgenic_',
+                                     pixel_demographics$Tissue[j])
+        
+        # 12.15.21 realized the below line is a duplicate of 3 lines up
+        # total_transgenic <- sum(na.omit(output$transgenic[which(
+        #   output$ID==randomization_datasheet$ID[i] & 
+        #     output$segment_hex == pixel_demographics$Tissue[j])]))
+        
         # print(paste0('Total transgenic explants on plate ',
         #             randomization_datasheet$ID[i],
         #             ' and tissue ',
@@ -497,7 +560,9 @@ for (i in 1:nrow(randomization_datasheet)){
           randomization_datasheet[i, eval(column_of_interest)] <- NA
         }
         if(randomization_datasheet$total_explants[i]>0){
-          randomization_datasheet[i, eval(column_of_interest)] <- total_transgenic / randomization_datasheet$total_explants[i]
+          randomization_datasheet[i, eval(column_of_interest)] <- 
+            total_transgenic / 
+            randomization_datasheet$total_explants[i]
         }
         
         #randomization_datasheet[i, eval(column_of_interest)] <- total_transgenic / randomization_datasheet$total_explants[i]
@@ -515,12 +580,15 @@ print(paste0("Maximum # grid positions with transgenic shoot in any plate: ", ma
 ## Now calculate all of each tissue whether transgenic or not
 # Initialize new columns
 for (j in 1:nrow(pixel_demographics)){
+    print(pixel_demographics[j, ])
     new_column_name <- paste0('n_', pixel_demographics$Tissue[j])
-    randomization_datasheet <- cbind(randomization_datasheet, rep(NA, nrow(randomization_datasheet)))
+    randomization_datasheet <- cbind(randomization_datasheet, 
+                                     as.numeric(rep(NA, nrow(randomization_datasheet))))
     colnames(randomization_datasheet)[ncol(randomization_datasheet)] <- new_column_name
     
     new_column_name <- paste0('portion_', pixel_demographics$Tissue[j])
-    randomization_datasheet <- cbind(randomization_datasheet, rep(NA, nrow(randomization_datasheet)))
+    randomization_datasheet <- cbind(randomization_datasheet, 
+                                     as.numeric(rep(NA, nrow(randomization_datasheet))))
     colnames(randomization_datasheet)[ncol(randomization_datasheet)] <- new_column_name
 }
 
@@ -565,26 +633,27 @@ for (j in 1:nrow(pixel_demographics)){
   column_of_interest <- paste0('portion_transgenic_', pixel_demographics$Tissue[j])
   print(paste0("Column of interest is ", column_of_interest))
   print(paste0("For transgenic tissue, What is the range of values for portion for ", pixel_demographics$Tissue[j]))
-  print(min(randomization_datasheet[, eval(column_of_interest)]),
-        NA.rm = TRUE)
-  print(max(randomization_datasheet[, eval(column_of_interest)]),
-        NA.rm = TRUE)
+  print(min(randomization_datasheet[, get(column_of_interest)],
+            na.rm = TRUE))
+  
+  print(max(randomization_datasheet[, get(column_of_interest)],
+            na.rm = TRUE))
   
   print(paste0("What are factor levels?"))
-  print(levels(factor(randomization_datasheet[, eval(column_of_interest)])))
+  print(levels(factor(randomization_datasheet[, get(column_of_interest)])))
   cat("\n")
   
   
   column_of_interest <- paste0('portion_', pixel_demographics$Tissue[j])
   print(paste0("Column of interest is ", column_of_interest))
   print(paste0("For total tissue, What is the range of values for portion for ", pixel_demographics$Tissue[j]))
-  print(min(randomization_datasheet[, eval(column_of_interest)]),
-        NA.rm = TRUE)
-  print(max(randomization_datasheet[, eval(column_of_interest)]),
-        NA.rm = TRUE)
+  print(min(randomization_datasheet[, get(column_of_interest)],
+            na.rm = TRUE))
+  print(max(randomization_datasheet[, get(column_of_interest)],
+            na.rm = TRUE))
   
   print(paste0("What are factor levels?"))
-  print(levels(factor(randomization_datasheet[, eval(column_of_interest)])))
+  print(levels(factor(randomization_datasheet[, get(column_of_interest)])))
   cat("\n")
 }
 
@@ -660,8 +729,17 @@ if(opt$sort==1){
 
 
 
+if(!dir.exists("Perc of explants with X")){
+  dir.create("Perc of explants with X")
+}
 
+setwd("Perc of explants with X")
 
+if(!dir.exists("By genotype")){
+  dir.create("By genotype")
+}
+
+setwd("By genotype")
 
 # Callus portion plots (2A1 and 2A2) ----------------------------------------------------
 
@@ -685,7 +763,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_Callus, group=
   scale_y_continuous(labels = function(x) paste0(x*100, "%")) +
   ylab("Grid positions with callus") +
   theme_dark() + 
-  geom_jitter(width=0.50, height=0.001, size = 1) +
+  geom_jitter(width=0.25, height=0.001, size = 1) +
   facet_grid(~`Genotype_ID`) +
   #stat_summary(fun.y=mean, geom="line", aes(group=1))  + 
   stat_summary(fun.y=mean, geom="point") +
@@ -712,8 +790,8 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_transgenic_Cal
                alpha=0.2) + 
   scale_y_continuous(labels = function(x) paste0(x*100, "%")) +
   theme_dark() + 
-  geom_jitter(width=0.50, height=0.001, size = 1) +
-  ylab("Grid positions with transgenic callus") +
+  geom_jitter(width=0.25, height=0.001, size = 1) +
+  ylab(paste0("Grid positions with ", opt$Reporter, "+ callus")) +
   facet_grid(~`Genotype_ID`) +
   #stat_summary(fun.y=mean, geom="line", aes(group=1))  + 
   stat_summary(fun.y=mean, geom="point") +
@@ -723,7 +801,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_transgenic_Cal
         axis.title.y = element_text(size = rel(1.3)),
         strip.text = element_text(angle = angle, size=rel(1.3)),
         plot.title = element_text(size=rel(1.7))) +
-  ggtitle("Rates of transgenic callus regeneration")#+
+  ggtitle(paste0("Rates of ", opt$Reporter, "+ callus regeneration"))#+
 #scale_y_continuous(labels = scales::scientific)library(randomcoloR)
 
 ggsave(
@@ -740,7 +818,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_Shoot, group=`
   scale_y_continuous(labels = function(x) paste0(x*100, "%")) +
   ylab("Grid positions with shoot") +
   theme_dark() +
-  geom_jitter(width=0.50, height=0.001, size = 1) +
+  geom_jitter(width=0.25, height=0.001, size = 1) +
   facet_grid(~`Genotype_ID`) +
   #stat_summary(fun.y=mean, geom="line", aes(group=1))  + 
   stat_summary(fun.y=mean, geom="point") +
@@ -750,7 +828,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_Shoot, group=`
         axis.title.y = element_text(size = rel(1.3)),
         strip.text = element_text(angle = angle, size=rel(1.3)),
         plot.title = element_text(size=rel(1.7))) +
-  ggtitle("Rates of Shoot regeneration (including escapes)")#+
+  ggtitle("Rates of shoot regeneration (including escapes)")#+
 #scale_y_continuous(labels = scales::scientific)
 
 ggsave(
@@ -764,8 +842,8 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_transgenic_Sho
                alpha=0.2) + 
   scale_y_continuous(labels = function(x) paste0(x*100, "%")) +
   theme_dark() + 
-  geom_jitter(width=0.50, height=0.001, size = 1) +
-  ylab("Grid positions with transgenic Shoot") +
+  geom_jitter(width=0.25, height=0.001, size = 1) +
+  ylab(paste0("Grid positions with ", opt$Reporter, "+ shoot")) +
   facet_grid(~`Genotype_ID`) +
   #stat_summary(fun.y=mean, geom="line", aes(group=1))  + 
   stat_summary(fun.y=mean, geom="point") +
@@ -775,7 +853,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_transgenic_Sho
         axis.title.y = element_text(size = rel(1.3)),
         strip.text = element_text(angle = angle, size=rel(1.3)),
         plot.title = element_text(size=rel(1.7))) +
-  ggtitle("Rates of transgenic Shoot regeneration")#+
+  ggtitle(paste0("Rates of ", opt$Reporter, "+ shoot regeneration"))#+
 #scale_y_continuous(labels = scales::scientific)library(randomcoloR)
 
 ggsave(
@@ -793,7 +871,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_All_regenerate
   scale_y_continuous(labels = function(x) paste0(x*100, "%")) +
   ylab("Grid positions with callus or shoot") +
   theme_dark() +
-  geom_jitter(width=0.50, height=0.001, size = 1) +
+  geom_jitter(width=0.25, height=0.001, size = 1) +
   facet_grid(~`Genotype_ID`) +
   #stat_summary(fun.y=mean, geom="line", aes(group=1))  + 
   stat_summary(fun.y=mean, geom="point") +
@@ -803,7 +881,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_All_regenerate
         axis.title.y = element_text(size = rel(1.3)),
         strip.text = element_text(angle = angle, size=rel(1.3)),
         plot.title = element_text(size=rel(1.7))) +
-  ggtitle("Rates of callus or shoot regeneration (including escapes)")#+
+  ggtitle("Rates of callus/shoot regeneration (inc. escapes)")#+
 #scale_y_continuous(labels = scales::scientific)
 
 ggsave(
@@ -817,8 +895,8 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_transgenic_All
                alpha=0.2) + 
   scale_y_continuous(labels = function(x) paste0(x*100, "%")) +
   theme_dark() + 
-  geom_jitter(width=0.50, height=0.001, size = 1) +
-  ylab("Grid positions with transgenic callus or shoot") +
+  geom_jitter(width=0.25, height=0.001, size = 1) +
+  ylab(paste0("Grid positions with ", opt$Reporter, "+ callus or shoot")) +
   facet_grid(~`Genotype_ID`) +
   #stat_summary(fun.y=mean, geom="line", aes(group=1))  + 
   stat_summary(fun.y=mean, geom="point") +
@@ -828,7 +906,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_transgenic_All
         axis.title.y = element_text(size = rel(1.3)),
         strip.text = element_text(angle = angle, size=rel(1.3)),
         plot.title = element_text(size=rel(1.7))) +
-  ggtitle("Rates of reporter expression in callus or shoot")#+
+  ggtitle(paste0("Rates of ", opt$Reporter, " expression in callus/shoot"))#+
 #scale_y_continuous(labels = scales::scientific)library(randomcoloR)
 
 ggsave(
@@ -849,7 +927,6 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_All_tissue, gr
   scale_y_continuous(labels = function(x) paste0(x*100, "%")) +
   ylab("Grid positions with any tissue") +
   theme_dark() +
-  geom_jitter(width=0.50, height=0.001, size = 1) +
   facet_grid(~`Genotype_ID`) +
   #stat_summary(fun.y=mean, geom="line", aes(group=1))  + 
   stat_summary(fun.y=mean, geom="point") +
@@ -859,7 +936,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_All_tissue, gr
         axis.title.y = element_text(size = rel(1.3)),
         strip.text = element_text(angle = angle, size=rel(1.3)),
         plot.title = element_text(size=rel(1.7))) +
-  ggtitle("Rates of any tissue")#+
+  ggtitle("Rates of any tissue (sanity check)")#+
 #scale_y_continuous(labels = scales::scientific)
 
 ggsave(
@@ -873,8 +950,8 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_transgenic_All
                alpha=0.2) + 
   scale_y_continuous(labels = function(x) paste0(x*100, "%")) +
   theme_dark() + 
-  geom_jitter(width=0.50, height=0.001, size = 1) +
-  ylab("Grid positions with any transgenic tissue") +
+  geom_jitter(width=0.25, height=0.001, size = 1) +
+  ylab(paste0("Grid positions with any ", opt$Reporter, "+ tissue")) +
   facet_grid(~`Genotype_ID`) +
   #stat_summary(fun.y=mean, geom="line", aes(group=1))  + 
   stat_summary(fun.y=mean, geom="point") +
@@ -884,7 +961,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_transgenic_All
         axis.title.y = element_text(size = rel(1.3)),
         strip.text = element_text(angle = angle, size=rel(1.3)),
         plot.title = element_text(size=rel(1.7))) +
-  ggtitle("Rates of any transgenic tissue")#+
+  ggtitle(paste0("Rates of any ", opt$Reporter, "+ tissue"))#+
 #scale_y_continuous(labels = scales::scientific)library(randomcoloR)
 
 ggsave(
@@ -897,6 +974,16 @@ ggsave(
 
 
 
+# Change dir --------------------------------------------------------------
+
+
+setwd("../")
+
+if(!dir.exists("Genotypes combined")){
+  dir.create("Genotypes combined")
+}
+
+setwd("Genotypes combined")
 # Callus portion plots - GENOTYPES COMBINE (2A1 and 2A2) ----------------------------------------------------
 
 cat("\n")
@@ -946,7 +1033,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_transgenic_Cal
   scale_y_continuous(labels = function(x) paste0(x*100, "%")) +
   theme_dark() + 
   #geom_jitter(width=0.10, height=0.001, size = 1) +
-  ylab("Grid positions with transgenic callus") +
+  ylab(paste0("Grid positions with ", opt$Reporter, "+ callus")) +
   #facet_grid(~`Genotype_ID`) +
   #stat_summary(fun.y=mean, geom="line", aes(group=1))  + 
   stat_summary(fun.y=mean, geom="point") +
@@ -957,7 +1044,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_transgenic_Cal
         strip.text = element_text(angle = angle, size=rel(1.3)),
         plot.title = element_text(size=rel(1.7))) +
   #geom_jitter(width=0.050, height=0, size = 1) +
-  ggtitle("Rates of transgenic callus regeneration")#+
+  ggtitle(paste0("Rates of ", opt$Reporter, "+ callus regeneration"))#+
 #scale_y_continuous(labels = scales::scientific)library(randomcoloR)
 
 ggsave(
@@ -985,7 +1072,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_Shoot, group=`
         strip.text = element_text(angle = angle, size=rel(1.3)),
         plot.title = element_text(size=rel(1.7))) +
   #geom_jitter(width=0.050, height=0, size = 1) +
-  ggtitle("Rates of Shoot regeneration (including escapes)")#+
+  ggtitle("Rates of shoot regeneration (including escapes)")#+
 #scale_y_continuous(labels = scales::scientific)
 
 ggsave(
@@ -1000,7 +1087,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_transgenic_Sho
   scale_y_continuous(labels = function(x) paste0(x*100, "%")) +
   theme_dark() + 
   #geom_jitter(width=0.10, height=0.001, size = 1) +
-  ylab("Grid positions with transgenic Shoot") +
+  ylab(paste0("Grid positions with ", opt$Reporter, "+ shoot")) +
   #facet_grid(~`Genotype_ID`) +
   #stat_summary(fun.y=mean, geom="line", aes(group=1))  + 
   stat_summary(fun.y=mean, geom="point") +
@@ -1010,7 +1097,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_transgenic_Sho
         axis.title.y = element_text(size = rel(1.3)),
         strip.text = element_text(angle = angle, size=rel(1.3)),
         plot.title = element_text(size=rel(1.7))) +
-  ggtitle("Rates of transgenic Shoot regeneration")#+
+  ggtitle(paste0("Rates of ", opt$Reporter, "+ shoot regeneration"))#+
 #scale_y_continuous(labels = scales::scientific)library(randomcoloR)
 
 ggsave(
@@ -1026,7 +1113,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_All_regenerate
                color="white",
                alpha=0.2) +
   scale_y_continuous(labels = function(x) paste0(x*100, "%")) +
-  ylab("Grid positions with callus or shoot") +
+  ylab("Grid positions with callus/shoot") +
   theme_dark() +
   #geom_jitter(width=0.10, height=0.001, size = 1) +
   #facet_grid(~`Genotype_ID`) +
@@ -1038,7 +1125,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_All_regenerate
         axis.title.y = element_text(size = rel(1.3)),
         strip.text = element_text(angle = angle, size=rel(1.3)),
         plot.title = element_text(size=rel(1.7))) +
-  ggtitle("Rates of callus or shoot regeneration (including escapes)")#+
+  ggtitle("Rates of callus/shoot regeneration (inc. escapes)")#+
 #scale_y_continuous(labels = scales::scientific)
 
 ggsave(
@@ -1053,7 +1140,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_transgenic_All
   scale_y_continuous(labels = function(x) paste0(x*100, "%")) +
   theme_dark() + 
   #geom_jitter(width=0.10, height=0.001, size = 1) +
-  ylab("Grid positions with transgenic callus or shoot") +
+  ylab(paste0("Grid positions with ", opt$Reporter, "+ callus or shoot")) +
   #facet_grid(~`Genotype_ID`) +
   #stat_summary(fun.y=mean, geom="line", aes(group=1))  + 
   stat_summary(fun.y=mean, geom="point") +
@@ -1064,7 +1151,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_transgenic_All
         strip.text = element_text(angle = angle, size=rel(1.3)),
         plot.title = element_text(size=rel(1.7))) +
   #geom_jitter(width=0.050, height=0, size = 1) +
-  ggtitle("Rates of reporter expression in callus or shoot")#+
+  ggtitle(paste0("Rates of ", opt$Reporter, " expression in callus or shoot"))#+
 #scale_y_continuous(labels = scales::scientific)library(randomcoloR)
 
 ggsave(
@@ -1095,7 +1182,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_All_tissue, gr
         axis.title.y = element_text(size = rel(1.3)),
         strip.text = element_text(angle = angle, size=rel(1.3)),
         plot.title = element_text(size=rel(1.7))) +
-  ggtitle("Rates of any tissue")#+
+  ggtitle("Rates of any tissue (sanity check)")#+
 #scale_y_continuous(labels = scales::scientific)
 
 ggsave(
@@ -1110,7 +1197,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_transgenic_All
   scale_y_continuous(labels = function(x) paste0(x*100, "%")) +
   theme_dark() + 
   #geom_jitter(width=0.10, height=0.001, size = 1) +
-  ylab("Grid positions with any transgenic tissue") +
+  ylab(paste0("Grid positions with any ", opt$Reporter, "+ tissue")) +
   #facet_grid(~`Genotype_ID`) +
   #stat_summary(fun.y=mean, geom="line", aes(group=1))  + 
   stat_summary(fun.y=mean, geom="point") +
@@ -1120,7 +1207,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=portion_transgenic_All
         axis.title.y = element_text(size = rel(1.3)),
         strip.text = element_text(angle = angle, size=rel(1.3)),
         plot.title = element_text(size=rel(1.7))) +
-  ggtitle("Rates of any transgenic tissue")#+
+  ggtitle(paste0("Rates of any ", opt$Reporter, "+ tissue"))#+
 #scale_y_continuous(labels = scales::scientific)library(randomcoloR)
 
 ggsave(
@@ -1133,6 +1220,23 @@ ggsave(
 
 
 
+
+# Change dir --------------------------------------------------------------
+
+
+
+setwd("../../")
+
+if(!dir.exists("N of grid spots with X")){
+  dir.create("N of grid spots with X")
+}
+setwd("N of grid spots with X")
+
+if(!dir.exists("By genotype")){
+  dir.create("By genotype")
+}
+
+setwd("By genotype")
 
 # Callus sum plots (3A1 and 3A2) ------------------------------------------------------
 cat("\n")
@@ -1177,7 +1281,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=n_transgenic_Callus, g
                  color="white",
                  alpha=0.2) + 
     theme_dark() + 
-    ylab("# Grid positions with transgenic callus") +
+    ylab(paste0("# Grid positions with ", opt$Reporter, "+ callus")) +
     geom_jitter(width=0.05, height=0.01, size = 1) +
     facet_grid(~`Genotype_ID`) +
     #stat_summary(fun.y=mean, geom="line", aes(group=1))  + 
@@ -1188,7 +1292,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=n_transgenic_Callus, g
           axis.title.y = element_text(size = rel(1.3)),
           strip.text = element_text(angle = angle, size=rel(1.3)),
           plot.title = element_text(size=rel(1.7))) +
-    ggtitle("Rates of transgenic callus regeneration")#+
+    ggtitle(paste0("Rates of ", opt$Reporter, "+ callus regeneration"))#+
     #scale_y_continuous(labels = scales::scientific)library(randomcoloR)
 
 ggsave(
@@ -1228,7 +1332,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=n_transgenic_Shoot, gr
                  fill=randomColor(luminosity=c("bright")),
                  color="white",
                  alpha=0.2) + 
-    ylab("# Grid positions with transgenic shoot") +
+    ylab(paste0("# Grid positions with ", opt$Reporter, "+ shoot")) +
     theme_dark() + 
     geom_jitter(width=0.05, height=0.01, size = 1) +
     facet_grid(~`Genotype_ID`) +
@@ -1241,7 +1345,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=n_transgenic_Shoot, gr
           strip.text = element_text(angle = angle, size=rel(1.3)),
           plot.title = element_text(size=rel(1.7))) +
     #geom_jitter(width=0.3, height=0.005, size = 1) +
-    ggtitle("Rates of transgenic shoot regeneration")#+
+    ggtitle(paste0("Rates of ", opt$Reporter, "+ shoot regeneration"))#+
     #scale_y_continuous(labels = scales::scientific)
     
 ggsave(
@@ -1280,7 +1384,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=n_transgenic_All_regen
                color="white",
                alpha=0.2) + 
   theme_dark() + 
-  ylab("# Grid positions with any transgenic callus or shoot") +
+  ylab(paste0("# Grid positions with any ", opt$Reporter, "+ callus/shoot")) +
   geom_jitter(width=0.05, height=0.01, size = 1) +
   facet_grid(~`Genotype_ID`) +
   #stat_summary(fun.y=mean, geom="line", aes(group=1))  + 
@@ -1291,7 +1395,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=n_transgenic_All_regen
         axis.title.y = element_text(size = rel(1.3)),
         strip.text = element_text(angle = angle, size=rel(1.3)),
         plot.title = element_text(size=rel(1.7))) +
-  ggtitle("Rates of transgenic callus or shoot regeneration")#+
+  ggtitle(paste0("Rates of ", opt$Reporter, "+ callus/shoot regeneration"))#+
 #scale_y_continuous(labels = scales::scientific)library(randomcoloR)
 
 ggsave(
@@ -1319,7 +1423,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=n_All_tissue, group=`T
         axis.title.y = element_text(size = rel(1.3)),
         strip.text = element_text(angle = angle, size=rel(1.3)),
         plot.title = element_text(size=rel(1.7))) +
-  ggtitle("Rates of any tissue (including escapes)")#+
+  ggtitle("Rates of any tissue (including spots with missing explants)")#+
 #scale_y_continuous(labels = scales::scientific)
 
 ggsave(
@@ -1332,7 +1436,7 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=n_transgenic_All_tissu
                color="white",
                alpha=0.2) + 
   theme_dark() + 
-  ylab("# Grid positions with any transgenic tissue") +
+  ylab(paste0("# Grid positions with any ", opt$Reporter, "+ tissue")) +
   geom_jitter(width=0.05, height=0.01, size = 1) +
   facet_grid(~`Genotype_ID`) +
   #stat_summary(fun.y=mean, geom="line", aes(group=1))  + 
@@ -1343,13 +1447,24 @@ ggplot(randomization_datasheet, aes(x=`Treatment name`, y=n_transgenic_All_tissu
         axis.title.y = element_text(size = rel(1.3)),
         strip.text = element_text(angle = angle, size=rel(1.3)),
         plot.title = element_text(size=rel(1.7))) +
-  ggtitle("Rates of reporter expression in any tissue")#+
+  ggtitle(paste0("Rates of ", opt$Reporter, " expression in any grid spot (inc. empty)"))#+
 #scale_y_continuous(labels = scales::scientific)library(randomcoloR)
 
 ggsave(
   "./3D2_All_tissue_transgenic.png",
     plot = last_plot(),   width = plot_horz_in,   height = opt$height,   units = "in")
 
+
+# Change dir --------------------------------------------------------------
+
+
+setwd("../../")
+
+if(!dir.exists("Raw signal stats")){
+  dir.create("Raw signal stats")
+}
+
+setwd("Raw signal stats")
 
 # Per explant signal plots ------------------------------------------------
 
@@ -1364,7 +1479,14 @@ print("Before merging, look at table of ID in both. ")
 print(table(randomization_datasheet$ID))
 print(table(output$ID))
 
-combined_data <- merge(output, randomization_datasheet, by="ID", all.x=TRUE)
+output <- output[which(output$ID_exp != "__NA"), ]
+
+# The cartesian merge error here can result if we include missing explant
+#  analysis results for a given plate twice. In those cases, the `pre_label.R`
+#  output needs to be loaded to make sure redundant samples or problematic imgs
+#  are excluded.
+combined_data <- merge(output, randomization_datasheet, by="ID",
+                       all.x=TRUE, allow.cartesian = FALSE)
 
 print(paste0("Rows in merged output: ", nrow(combined_data)))
 print("List of treatments in this combined data: ")
@@ -1373,6 +1495,10 @@ cat("\n")
 
 combined_data$Genotype_ID <- as.factor(combined_data$Genotype_ID)
 
+
+# When not all images are in randomization datasheet (e.g. some excluded due to being certain
+#   explant type), this line needed to stop NA from being plotted.
+combined_data <- combined_data[which(!is.na(combined_data$`Treatment name`)), ]
 for(i in 1:(nrow(pixel_demographics)-1)){
   print(paste0("Making final plots for tissue: "))
   print(pixel_demographics[i, ])
@@ -1403,10 +1529,10 @@ for(i in 1:(nrow(pixel_demographics)-1)){
             axis.title.y = element_text(size = rel(1.3)),
             strip.text = element_text(angle = angle, size=rel(1.3)),
             plot.title = element_text(size=rel(1.7))) +
-      ylab("Mean reporter signal") +
+      ylab(paste0("Mean ", opt$Reporter, " signal")) +
       #stat_summary(fun.y=mean, geom="line", aes(group=1))  + 
       stat_summary(fun.y=mean, geom="point") +
-      ggtitle(paste0("Mean reporter signal in ", pixel_demographics$Tissue[i])) +
+      ggtitle(paste0("Mean ", opt$Reporter, " signal in ", tolower(pixel_demographics$Tissue[i]))) +
       scale_y_continuous(labels = scales::scientific)
     print("Finished making mean signal plot... Now to save and make the rest.")
     print(p1)
@@ -1432,10 +1558,10 @@ for(i in 1:(nrow(pixel_demographics)-1)){
           axis.title.y = element_text(size = rel(1.3)),
           strip.text = element_text(angle = angle, size=rel(1.3)),
           plot.title = element_text(size=rel(1.7))) +
-    ylab("Max reporter signal") +
+    ylab(paste0("Max ", opt$Reporter, " signal")) +
     #stat_summary(fun.y=mean, geom="line", aes(group=1))  + 
     stat_summary(fun.y=mean, geom="point") +
-    ggtitle(paste0("Max reporter signal in ", pixel_demographics$Tissue[i]))+
+    ggtitle(paste0("Max ", opt$Reporter, " signal in ", tolower(pixel_demographics$Tissue[i])))+
     scale_y_continuous(labels = scales::scientific)
   print(p2)
   
@@ -1459,22 +1585,281 @@ for(i in 1:(nrow(pixel_demographics)-1)){
           axis.title.y = element_text(size = rel(1.3)),
           strip.text = element_text(angle = angle, size=rel(1.3)),
           plot.title = element_text(size=rel(1.7))) +
-    ylab("Total reporter signal") +
+    ylab(paste0("Total ", opt$Reporter, " signal")) +
     #stat_summary(fun.y=mean, geom="line", aes(group=1))  + 
     stat_summary(fun.y=mean, geom="point") +
-    ggtitle(paste0("Total reporter signal in ", pixel_demographics$Tissue[i])) +
+    ggtitle(paste0("Total ", opt$Reporter, " signal in ", tolower(pixel_demographics$Tissue[i]))) +
     scale_y_continuous(labels = scales::scientific)
   print(p3)
   
   ggsave(
     paste0("A",i,"_", pixel_demographics$Tissue[i],"_Total_signal.png"),
       plot = last_plot(),   width = plot_horz_in,   height = opt$height,   units = "in")
+  
+  p4 <- ggplot(data_subset, aes(x=`Treatment name`, y=total_pixels, group=`Treatment name`)) + 
+    geom_boxplot(outlier.shape=NA,
+                 fill=randomColor(luminosity=c("bright")),
+                 color="black",
+                 alpha=0.2) +
+    theme_gray() +
+    geom_jitter(width=0.05, height=0.01, size = 1) +
+    facet_grid(~`Genotype_ID`) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, face = "bold", size = rel(1.4)),
+          axis.title.x = element_text(size = rel(1.3)),
+          axis.text.y = element_text(size = rel(1.5), vjust=-1),
+          axis.title.y = element_text(size = rel(1.3)),
+          strip.text = element_text(angle = angle, size=rel(1.3)),
+          plot.title = element_text(size=rel(1.7))) +
+    ylab(paste0("Total ", tolower(pixel_demographics$Tissue[i]), " pixels")) +
+    #stat_summary(fun.y=mean, geom="line", aes(group=1))  + 
+    stat_summary(fun.y=mean, geom="point") +
+    ggtitle(paste0("Total pixels of ", tolower(pixel_demographics$Tissue[i]))) +
+    scale_y_continuous(labels = scales::scientific)
+  print(p4)
+  
+  ggsave(
+    paste0("A",i,"_", pixel_demographics$Tissue[i],"_Total_pixels.png"),
+    plot = last_plot(),   width = plot_horz_in,   height = opt$height,   units = "in")
+  
+  p5 <- ggplot(data_subset, aes(x=`Treatment name`, y=n_pixels_passing_threshold, group=`Treatment name`)) + 
+    geom_boxplot(outlier.shape=NA,
+                 fill=randomColor(luminosity=c("bright")),
+                 color="black",
+                 alpha=0.2) +
+    theme_gray() +
+    geom_jitter(width=0.05, height=0.01, size = 1) +
+    facet_grid(~`Genotype_ID`) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, face = "bold", size = rel(1.4)),
+          axis.title.x = element_text(size = rel(1.3)),
+          axis.text.y = element_text(size = rel(1.5), vjust=-1),
+          axis.title.y = element_text(size = rel(1.3)),
+          strip.text = element_text(angle = angle, size=rel(1.3)),
+          plot.title = element_text(size=rel(1.7))) +
+    ylab(paste0("Total ", opt$Reporter, "+ ", tolower(pixel_demographics$Tissue[i]), " pixels")) +
+    #stat_summary(fun.y=mean, geom="line", aes(group=1))  + 
+    stat_summary(fun.y=mean, geom="point") +
+    ggtitle(paste0("Total ", opt$Reporter, "+ pixels in ", tolower(pixel_demographics$Tissue[i]))) +
+    scale_y_continuous(labels = scales::scientific)
+  print(p5)
+  
+  ggsave(
+    paste0("A",i,"_", pixel_demographics$Tissue[i],"_pixels_w_strong_signal.png"),
+    plot = last_plot(),   width = plot_horz_in,   height = opt$height,   units = "in")
 }
 
 
 
 # Write out summary statistics of # transgenic per plate ------------------
 
+setwd("../")
+
+print(paste0("Saving summary stats in folder: ",
+             getwd()))
+
 fwrite(randomization_datasheet,
-       paste0(rundir, "/output/", opt$datapath1, "plants_over_plates.csv")
+       #paste0(rundir, "/output/", opt$datapath1, "summary_stats_by_plate.csv")
+       "summary_stats_by_plate.csv"
 )
+
+print("Saved summary_stats_by_plate.csv")
+
+
+# Write out summary of signal statistics per explant ----------------------
+
+
+if(sum(grepl("Tissue type", colnames(combined_data))) == 1){
+  explant_data <- cbind(combined_data$ID,
+                        combined_data$grid_item,
+                        combined_data$Genotype_ID,
+                        combined_data$`Treatment name`,
+                        combined_data$`Tissue type`,
+                        combined_data$filename.x,
+                        combined_data$segment_hex,
+                        combined_data$segment_present,
+                        combined_data$mean_signal,
+                        combined_data$max_signal,
+                        combined_data$total_signal,
+                        combined_data$total_pixels)
+  
+  colnames(explant_data) <- c("ID",
+                              "Grid position",
+                              "Genotype ID",
+                              "Treatment",
+                              "Explant type",
+                              "Filename",
+                              "Tissue segment",
+                              "Segment present",
+                              "Mean signal",
+                              "Max signal",
+                              "Total signal",
+                              "Total pixels")
+} else {
+  explant_data <- cbind(combined_data$ID,
+                        combined_data$grid_item,
+                        combined_data$Genotype_ID,
+                        combined_data$`Treatment name`,
+                        combined_data$filename.x,
+                        combined_data$segment_hex,
+                        combined_data$segment_present,
+                        combined_data$mean_signal,
+                        combined_data$max_signal,
+                        combined_data$total_signal,
+                        combined_data$total_pixels)
+  
+  colnames(explant_data) <- c("ID",
+                              "Grid position",
+                              "Genotype ID",
+                              "Treatment",
+                              "Filename",
+                              "Tissue segment",
+                              "Segment present",
+                              "Mean signal",
+                              "Max signal",
+                              "Total signal",
+                              "Total pixels")
+}
+
+explant_data <- as.data.frame(explant_data)
+
+explant_data$`Segment present` <- as.logical(explant_data$`Segment present`)
+
+fwrite(explant_data, "summary_stats_by_explant.csv")
+print("Saved summary_stats_by_explant.csv")
+
+
+# Perform statistical tests -----------------------------------------------
+# New section being added 4/19/22
+# We will do tests over whole-plate statistics (as % of grid items)
+#   in `randomization_datasheet` as well as over grid-item statistics 
+#   (fluorophore signal raw stats) in `combined_data`
+
+print("Completed workflow up until statistical tests")
+
+library(nlme)
+library(emmeans)
+library(plyr)
+
+# First, for whole-plate stats.
+traits <- colnames(randomization_datasheet)[
+  grepl("portion",
+        colnames(randomization_datasheet))]
+
+colnames(randomization_datasheet) <- gsub(" ", "_", colnames(
+  randomization_datasheet
+))
+
+randomization_datasheet_dummy <- randomization_datasheet
+randomization_datasheet_dummy$Block <- 1
+
+emmeans_table <- function(lme_object){
+  emm1 = emmeans(lme_object, specs = pairwise ~ Treatment_name)#,
+                 #regrid = "response") # doesn't work with regrid or transform
+  contrasts <- emm1$contrasts
+  contrasts_w_CI <- confint(contrasts)
+  contrasts_w_CI$p <- summary(contrasts, infer = TRUE)$p.value
+  contrasts_w_CI
+}
+
+all_anova_plate_level <- data.frame()
+all_emm_plate_level <- data.frame()
+
+for(i in 1:length(traits)){
+  if(length(levels(factor(randomization_datasheet$Block))) > 1){
+    formula <- as.formula(paste(traits[i], "~ Treatment_name + Block"))
+  }
+  
+  if(length(levels(factor(randomization_datasheet$Block))) == 1){
+    formula <- as.formula(paste(traits[i], "~ Treatment_name"))
+  }
+  
+  if(length(levels(factor(randomization_datasheet$Genotype_ID))) == 1){
+    model <- lm(formula,
+                data = randomization_datasheet)
+  }
+  
+  if(length(levels(factor(randomization_datasheet$Genotype_ID))) > 1){
+    model <- lme(formula,
+                 random =  ~ 1 | Genotype_ID,
+                 data = randomization_datasheet)
+  }
+  
+  model_anova <- as.data.frame(anova(model))
+  model_emm <- emmeans_table(model)
+  
+  model_anova$trait <- traits[i]
+  model_emm$trait <- traits[i]
+  
+  all_anova_plate_level <- rbind.fill(all_anova_plate_level, model_anova)
+  all_emm_plate_level <- rbind.fill(all_emm_plate_level, model_emm)
+}
+
+traits <- c("mean_signal",
+            "max_signal",
+            "total_signal",
+            "total_pixels",
+            "n_pixels_passing_threshold")
+
+all_anova_explant_level <- data.frame()
+all_emm_explant_level <- data.frame()
+
+colnames(combined_data) <- gsub(" ", "_",
+                                colnames(combined_data))
+
+for(i in 1:(nrow(pixel_demographics)-1)){
+  #print(paste0("Doing explant-level stats for tissue: "))
+  #print(pixel_demographics[i, ])
+  #print("Dim before and after subsetting combined data to this tissue only")
+  #print(dim(combined_data))
+  data_subset <- combined_data[which(combined_data$segment_hex == pixel_demographics$Tissue[i]),]
+  #print(dim(data_subset))
+  #print("Max mean_signal")
+  #print(max(na.omit(data_subset$mean_signal)))
+  if (is.infinite(max(na.omit(data_subset$mean_signal)))){
+    next
+  }
+  
+  if(pixel_demographics$Tissue[i]!="All_regenerated_tissue" & pixel_demographics$Tissue[i]!="All_tissue"){
+    
+    for(i in 1:length(traits)){
+      print(traits[i])
+      if(length(levels(factor(randomization_datasheet$Block))) > 1){
+        formula <- as.formula(paste(traits[i], "~ Treatment_name + Block"))
+      }
+      
+      if(length(levels(factor(randomization_datasheet$Block))) == 1){
+        formula <- as.formula(paste(traits[i], "~ Treatment_name"))
+      }
+      
+      if(length(levels(factor(randomization_datasheet$Genotype_ID))) == 1){
+        model <- lm(formula,
+                    data = data_subset)
+      }
+      
+      if(length(levels(factor(randomization_datasheet$Genotype_ID))) > 1){
+        model <- lme(formula,
+                     random =  ~ 1 | Genotype_ID,
+                     data = data_subset)
+      }
+      
+      model_anova <- as.data.frame(anova(model))
+      model_emm <- emmeans_table(model)
+      
+      model_anova$trait <-
+        model_emm$trait <- traits[i]
+      model_anova$tissue <-
+        model_emm$tissue <- pixel_demographics$Tissue[i]
+      
+      all_anova_explant_level <- rbind.fill(all_anova_explant_level, model_anova)
+      all_emm_explant_level <- rbind.fill(all_emm_explant_level, model_emm)
+    }
+
+  }
+}
+
+fwrite(all_anova_plate_level, "ANOVA_plate_stats.csv")
+fwrite(all_emm_plate_level, "EMM_plate_stats.csv")
+
+fwrite(all_anova_explant_level, "ANOVA_explant_statistics.csv")
+fwrite(all_emm_explant_level, "EMM_explant_statistics.csv")
+
+
