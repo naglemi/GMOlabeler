@@ -358,17 +358,27 @@ def calculate_pixels_passing_threshold(CLS_data, threshold):
 
 def calculate_mean_signal(CLS_data):
     # Need to omit 0's because we zero out non-tissues of interest and only want statistics for tissues of interest
-    mean = CLS_data[CLS_data!=0].mean()
+    if CLS_data[CLS_data!=0].size == 0:
+        print("Warning! There is no data in this CLS matrix.")
+        mean = 0
+    if CLS_data[CLS_data!=0].size != 0:
+        mean = CLS_data[CLS_data!=0].mean()
     return(mean)
 def calculate_max_signal(CLS_data):
     # Need to omit 0's because we zero out non-tissues of interest and only want statistics for tissues of interest
     if CLS_data[CLS_data!=0].size == 0:
-        sys.exit("Error! There is no data in this CLS matrix.")
-    maximum = CLS_data[CLS_data!=0].max()
+        print("Warning! There is no data in this CLS matrix.")
+        maximum = 0
+    if CLS_data[CLS_data!=0].size != 0:
+        maximum = CLS_data[CLS_data!=0].max()
     return(maximum)
 def calculate_total_signal(CLS_data):
     # Need to omit 0's because we zero out non-tissues of interest and only want statistics for tissues of interest
-    sum = CLS_data[CLS_data!=0].sum()
+    if CLS_data[CLS_data!=0].size == 0:
+        print("Warning! There is no data in this CLS matrix.")
+        sum = 0
+    if CLS_data[CLS_data!=0].size != 0:
+        sum = CLS_data[CLS_data!=0].sum()
     return(sum)
 
 def segment_matrix(CLS_object,
@@ -430,7 +440,7 @@ def main(sample_df_path, grid, threshold, layer, grid_type, gmol_dir, format = '
 
     job_id = os.path.dirname(sample_df_path.split("/", 4)[4])
 
-    target_directory = gmol_dir + '/output/' + job_id
+    target_directory = gmol_dir + '/output/' + job_id + '/' + layer + '/'
     os.makedirs(target_directory, exist_ok=True)
     os.chdir(target_directory)
 
@@ -454,7 +464,7 @@ def main(sample_df_path, grid, threshold, layer, grid_type, gmol_dir, format = '
         layer2 = layer,
         format = format)
         for grid_item in range(1,grid_type+1):
-
+            print(grid_item)
             ##################################################
             ################ CROP EVERYTHING #################
             ##################################################
