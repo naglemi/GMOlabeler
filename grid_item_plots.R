@@ -444,6 +444,7 @@ print(randomization_datasheet$total_explants)
 
 cat("\n")
 #randomization_datasheet$total_explants[is.na(randomization_datasheet$total_explants)] <- opt$grid_type
+randomization_datasheet$total_explants[is.na(randomization_datasheet$total_explants)] <- 0
 print("DO NOT ASSUME for plates which we have no missing explant data that there are no missing explants (update Aug 24, 2022).")
 cat("\n")
 
