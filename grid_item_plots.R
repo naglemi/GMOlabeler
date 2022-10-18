@@ -1,4 +1,4 @@
-# Warning: This script is not my most elegant work.
+# Warning: This script is not my most elegantly-written work.
 #  There remain a plethora of debugging statements, which are being left here
 #  in case any bugs resulting from corner cases appear again. Ideally, these
 #  should be replaced with error codes that catch and describe the errors
@@ -6,6 +6,8 @@
 #  Also, plots have not been functionalized and there is a lot of redundant
 #  code for making plots. I'm keeping it this way for now, as these plots
 #  are tentative and we may wish to add more soon.
+#  To navigate this code, it is suggested to use the RStudio document
+#  outline panel (Ctrl+Shift+O)
 
 library(data.table)
 library(scales)
@@ -69,7 +71,7 @@ option_list = list(
               metavar="numeric"),
   make_option(c("-s", "--sort"),
               type="numeric",
-              default="0",
+              default="1",
               help=paste("Whether to sort genotypes according to difference in",
                          "effects of treatment on trangenic callus -", 
                          "numeric 0 (False) or 1 (True)"),
@@ -100,8 +102,9 @@ option_list = list(
 opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser);
 
-#opt <- readRDS("/home/michael/GMOlabeler/plots/Elements_17/Transformation/717_CRISPR_Reg/Test2_CRIRB/wk7/GFP/gridplot_args.rds")
+#opt <- readRDS("/home/michael/GMOlabeler/plots/Elements_17/Transformation/717_CRISPR_Reg/Test2_CRIRB/wk7_stashed_before_updating_grid_item_plots//GFP/gridplot_args.rds")
 #setwd("/home/michael/GMOlabeler/")
+#opt$debug <- 1
 
 # Import and preprocess GMOlabeler data ----------------------------------------------
 
@@ -409,7 +412,7 @@ colnames(randomization_datasheet) <- gsub("total_explants",
 
 ## Let's deal with inconsistently named columns here
 colnames(randomization_datasheet) <- gsub("Genotype ID", "Genotype_ID", 
-                                          olnames(randomization_datasheet))
+                                          colnames(randomization_datasheet))
 # If we don't already have a column named Treatment name,
 #  convert the Treatment column to this.
 if(sum(grepl("Treatment name", colnames(randomization_datasheet))) == 0){
