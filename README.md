@@ -9,7 +9,7 @@ These scripts are not intended for use outside of the [GMOdetector workflow](htt
 ## Computation of summary statistics of fluorescent protein signal in specific tissues
 The `main` function is used to integrate outputs from semantic segmentation and (CubeGLM)[https://github.com/naglemi/gmodetector_py]. Below is an example of how this function is used:
 
-```
+``` bash
 python main.py \
 <complementary_image_paths.csv> \ # string
 <my_aligned_grid.jpg> \ # string
@@ -30,7 +30,7 @@ To read `docstring` documentation for parameters in this Python script, enter Py
 ## Plotting summary statistics and performing statistical tests for significance of effects
 The `grid_item_plots.R` script is used to take outputs from the `main` function, produce plots and perform tests. Below is an example of basic use:
 
-```
+``` bash
 Rscript grid_item_plots.R \
 -d <my_data_folder>" \ # string
 -r <my_metadata_spreadsheet.xlsx> \ # string
