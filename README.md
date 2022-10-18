@@ -49,5 +49,8 @@ The additional parameters used here are also described in [GMOdetector workflow]
 
 To read `Roxygen2` descriptions of these parameters, call `Rscript grid_item_plots.R --help`.
 
+## Interpreting output plots and statistics
+Please see [the tutorials and examples on reading and interpreting plots and statistical outputs](https://github.com/naglemi/GMOnotebook/tree/master/3_Interpret_outputs), part of the main repository for the [GMOdetector workflow](https://github.com/naglemi/GMOnotebook).
+
 ## Acknowledgements
 We thank the National Science Foundation Plant Genome Research Program for support (IOS #1546900, Analysis of genes affecting plant regeneration and transformation in poplar), and members of GREAT TREES Research Cooperative at OSU for its support of the Strauss laboratory.
