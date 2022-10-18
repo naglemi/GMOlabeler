@@ -32,7 +32,7 @@ The `grid_item_plots.R` script is used to take outputs from the `main` function,
 
 ``` bash
 Rscript grid_item_plots.R \
--d <my_data_folder>" \ # string
+-d <my_data_folder> \ # string
 -r <my_metadata_spreadsheet.xlsx> \ # string
 --pixel_threshold <my_reporter_significance_threshold> \ # integer
 -missing <if_some_explants_missing_or_contaminated> \ # logical
