@@ -36,7 +36,7 @@ Rscript grid_item_plots.R \
 -missing <if_some_explants_missing_or_contaminated> \ # logical
 -MissingList <missing_explant_dataframe> \ # output from missing/contaminated explant script or user manual input
 --grid_type <grid_type_integer> \ # integer, "12" or "20"; 12-explant or 20-explant grids supported
---samples-pre-labeling ${data}/samples_pre_labeling.csv \
+--samples-pre-labeling <complementary_image_paths.csv> \ # string
 --height <my_plot_height> \ # integer
 --width <my_plot_width> \ # integer
 --Reporter <my_reporter_protein_ID> \ # string
