@@ -25,6 +25,8 @@ The parameters for this function are described in documentation for the [GMOdete
 - [Fluorescent protein settings](https://github.com/naglemi/GMOnotebook/blob/master/1_Decide_parameters/3_Other_parameters/3_Hyperspectral_settings.ipynb)
 - Producing spreadsheet of corresponding RGB images, segmentation masks and hyperspectral weights ([Main workflow](https://github.com/naglemi/GMOnotebook/blob/master/2a_Deploy_workflow/GMOdetector_template_v0.62.ipynb), section "Prepare sample datasheet input")
 
+To read `docstring` documentation for parameters in this Python script, enter Python, load the function and enter `help(main)`.
+
 ## Plotting summary statistics and performing statistical tests for significance of effects
 The `grid_item_plots.R` script is used to take outputs from the `main` function, produce plots and perform tests. Below is an example of basic use:
 
@@ -44,6 +46,8 @@ Rscript grid_item_plots.R \
 The additional parameters used here are also described in [GMOdetector workflow](https://github.com/naglemi/GMOnotebook) documentation.
 - [Preparing metadata spreadsheet](https://github.com/naglemi/GMOnotebook/blob/master/1_Decide_parameters/1_Metadata_and_randomization/1-Generate_randomization_scheme.ipynb)
 - [Missing/contaminated explant detection or manual user inputs](https://github.com/naglemi/GMOnotebook/blob/master/1_Decide_parameters/3_Other_parameters/2_Missing_or_contaminated_explants.ipynb)
+
+To read `Roxygen2` descriptions of these parameters, call `Rscript grid_item_plots.R --help`.
 
 ## Acknowledgements
 We thank the National Science Foundation Plant Genome Research Program for support (IOS #1546900, Analysis of genes affecting plant regeneration and transformation in poplar), and members of GREAT TREES Research Cooperative at OSU for its support of the Strauss laboratory.
