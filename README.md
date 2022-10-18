@@ -35,8 +35,8 @@ Rscript grid_item_plots.R \
 -d <my_data_folder> \ # string
 -r <my_metadata_spreadsheet.xlsx> \ # string
 --pixel_threshold <my_reporter_significance_threshold> \ # integer
--missing <if_some_explants_missing_or_contaminated> \ # logical
--MissingList <missing_explant_dataframe> \ # output from missing/contaminated explant script or user manual input
+--missing <if_some_explants_missing_or_contaminated> \ # logical
+--MissingList <missing_explant_dataframe> \ # output from missing/contaminated explant script or user manual input
 --grid_type <grid_type_integer> \ # integer, "12" or "20"; 12-explant or 20-explant grids supported
 --samples-pre-labeling <complementary_image_paths.csv> \ # string
 --height <my_plot_height> \ # integer
