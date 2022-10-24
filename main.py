@@ -463,6 +463,59 @@ def main(sample_df_path, grid, threshold, layer, grid_type, gmol_dir, format = '
         layer1 = 'Chl',
         layer2 = layer,
         format = format)
+
+        # Patch to deal with changes in laser cutoff
+        # If numpy array is less wide than RGB, we will pad it with zeros to be as wide.
+        if CLS_data_layer1.shape[1] < rgb.size[1]:
+            print("CLS image less wide than RGB. Padding width.")
+            CLS_data_layer1 = np.pad(CLS_data_layer1,
+                                     [(0,
+                                       0),
+                                     (0,
+                                      rgb.size[1] - CLS_data_layer1.shape[1])],
+                                    'constant')
+
+            CLS_data_layer2 = np.pad(CLS_data_layer2,
+                                     [(0,
+                                      0),
+                                      (0,
+                                       rgb.size[1] - CLS_data_layer2.shape[1])],
+                                      'constant')
+
+
+        # If numpy array is less long than RGB, we will pad it with zeros to be as long.
+        if CLS_data_layer1.shape[0] < rgb.size[0]:
+            print("CLS image less long than RGB. Padding width.")
+            CLS_data_layer1 = np.pad(CLS_data_layer1,
+                                     [(0,
+                                       rgb.size[0] - CLS_data_layer1.shape[0]),
+                                      (0,
+                                       0)],
+                                      'constant')
+
+            CLS_data_layer2 = np.pad(CLS_data_layer2,
+                                     [(0,
+                                       rgb.size[0] - CLS_data_layer2.shape[0]),
+                                      (0,
+                                       0)],
+                                      'constant')
+
+
+            rgb = rgb.crop((0, # left
+                            rgb.size[1] - CLS_data_layer1.shape[1], # top
+                            CLS_data_layer1.shape[0], # right
+                            rgb.size[1])) #bottom        
+
+            segment = segment.crop((0, # left
+                                    segment.size[1] - CLS_data_layer1.shape[1], # top
+                                    CLS_data_layer1.shape[0], # right
+                                    segment.size[1])) #bottom 
+
+            rgb_gridded = rgb_gridded.crop((0, # left
+                                            rgb_gridded.size[1] - CLS_data_layer1.shape[1], # top
+                                            CLS_data_layer1.shape[0], # right
+                                            rgb_gridded.size[1])) #bottom
+
         for grid_item in range(1,grid_type+1):
             print(grid_item)
             ##################################################
