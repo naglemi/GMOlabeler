@@ -20,6 +20,8 @@ library(stringr)
 library(permutes)
 library(buildmer)
 library(tidyr)
+library(nlme)
+library(plyr)
 '%!in%' <- function(x,y)!('%in%'(x,y))
 
 # Read arguments from command line  ---------------------------------------
@@ -1360,10 +1362,6 @@ if(opt$debug == TRUE) print("Saved summary_stats_by_explant.csv")
 #   (fluorophore signal raw stats) in `combined_data`
 
 if(opt$debug == TRUE) print("Completed workflow up until statistical tests")
-
-library(nlme)
-library(emmeans)
-library(plyr)
 
 # First, for whole-plate stats.
 traits <- colnames(randomization_datasheet)[
