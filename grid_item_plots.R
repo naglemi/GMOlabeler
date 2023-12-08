@@ -97,6 +97,11 @@ option_list = list(
               help=paste("Specify reporter so when",
                          "running with multiple reporters, results",
                          "for each are collected and saved separately."),
+              metavar="character"),
+  make_option(c("-u", "--outdir"),
+              type="character",
+              default=getwd(),
+              help="Directory to save outputs in (default is the current working directory)",
               metavar="character"))
 
 opt_parser = OptionParser(option_list=option_list);
@@ -108,9 +113,7 @@ opt = parse_args(opt_parser);
 
 # Import and preprocess GMOlabeler data ----------------------------------------------
 
-rundir <- getwd()
-
-wd <- paste0(rundir, "/plots/", opt$datapath1, "/", opt$Reporter, "/")
+wd <- paste0(outdir, "/gmolabeler_stats_plots/", opt$datapath1, "/", opt$Reporter, "/")
 if(!dir.exists(wd)) dir.create(wd, recursive = TRUE)
 setwd(wd)
 
@@ -122,7 +125,7 @@ if(opt$debug == TRUE){
 
 saveRDS(opt, file = arg_out_path)
 
-datapath <- paste0(rundir, "/output/", opt$datapath1, opt$Reporter, 
+datapath <- paste0(outdir, "/gmolabeler_logic_output/", opt$datapath1, opt$Reporter, 
                    "/stats_with_sums_over_tissues.csv")
 
 if(opt$debug == TRUE){
@@ -1694,10 +1697,7 @@ setwd("../")
 
 if(opt$debug == TRUE) print(paste0("Saving summary stats in folder: ", getwd()))
 
-fwrite(randomization_datasheet,
-       #paste0(rundir, "/output/", opt$datapath1, "summary_stats_by_plate.csv")
-       "summary_stats_by_plate.csv"
-)
+fwrite(randomization_datasheet, "summary_stats_by_plate.csv")
 
 if(opt$debug == TRUE) print("Saved summary_stats_by_plate.csv")
 
