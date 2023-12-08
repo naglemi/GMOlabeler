@@ -471,7 +471,7 @@ def main(sample_df_path, threshold, layer, grid_type, gmol_dir, format_type = 'c
 
     job_id = os.path.dirname(sample_df_path.split("/", 4)[4])
 
-    target_directory = gmol_dir + '/output/' + job_id + '/' + layer + '/'
+    target_directory = gmol_dir + '/' + job_id + '/' + layer + '/'
     print("Target directory: " + target_directory)
     
     os.makedirs(target_directory, exist_ok=True)
