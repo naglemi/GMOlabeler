@@ -30,7 +30,7 @@ option_list = list(
 opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser);
 
-arg_out_path <- "combine_args.rds"
+arg_out_path <- paste0(opt$output_dir, opt$datapath, "combine_args.rds")
 
 saveRDS(opt, file = arg_out_path)
 
