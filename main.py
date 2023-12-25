@@ -465,7 +465,7 @@ def main(sample_df_path, threshold, layer, grid_type, gmol_dir, format_type = 'c
     else:
         # Use default pixel_demographics
         pixel_demographics = pd.DataFrame(list(zip(['Shoot', 'Callus', 'Stem', 'Background'],
-                                                   ['00CC11', '0006CC', 'CC0000', '000000'],
+                                                   ['008000', '000080', '800000', '000000'],
                                                    ['green', 'blue', 'red', 'black'])),
                                           columns=['Tissue', 'hex_code', 'color'])
 
