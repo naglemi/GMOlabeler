@@ -116,9 +116,13 @@ opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser);
 print(opt)
 
-# opt <- readRDS("/home/gmobot/GMOGUI/output/gmodetector_out//gmolabeler_stats_plots/ETFB/wk26///DsRed/gridplot_args.rds")
-# opt$outdir <- "/home/gmobot/GMOGUI/output/gmodetector_out/"
-# opt$randomization_datasheet_path <- gsub("/mnt/Elements_24/", "/media/gmobot/Elements_24/Elements_24/", opt$randomization_datasheet_path)
+#opt <- readRDS("/media/gmobot/GMOdrive_A/output/gmodetector_out//gmolabeler_stats_plots/Elements_25/GTNEC_GWAS_poplar_transformation_necrotic_test/day9///GFP/gridplot_args.rds")
+#opt$outdir <- "/media/gmobot/GMOdrive_A/output/gmodetector_out/"
+#opt$randomization_datasheet_path <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$randomization_datasheet_path)
+#opt$`samples-pre-labeling` <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$`samples-pre-labeling`)
+#opt$MissingList <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$MissingList)
+#opt <- gsub("/mnt/drives/", "/media/gmobot/", opt)
+
 # opt$`samples-pre-labeling` <- gsub("/mnt/Elements_24/", "/media/gmobot/Elements_24/Elements_24/", opt$`samples-pre-labeling`)
 # opt$keypath <- "/home/gmobot/GMOGUI/euc_cubeschool_a1-v4_cpua2.key.csv"
 
@@ -219,6 +223,7 @@ if (opt$MissingList %in% c(FALSE, 0, NA, "None", "none")) {
 samples_pre_label <- fread(opt$`samples-pre-labeling`)
 nonredundant_rgb_list <- basename(
   gsub("_processed", "", samples_pre_label$rgb))
+nonredundant_rgb_list <- gsub("png", "jpg", nonredundant_rgb_list)
 
 missing_explant_data <- missing_explant_data[which(
   missing_explant_data$image_name %in% nonredundant_rgb_list), ]
@@ -277,6 +282,7 @@ if(opt$debug == TRUE){
     nrow(missing_explant_data_tidy), " respectively."))
 }
 
+output$filename <- gsub(".png", "_rgb.jpg", output$filename)
 output <- merge(x = output,
                 y = missing_explant_data_tidy,
                 by = c("filename", "grid_item"),
