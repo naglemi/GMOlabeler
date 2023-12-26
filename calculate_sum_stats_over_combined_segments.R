@@ -35,11 +35,13 @@ arg_out_path <- paste0(opt$output_dir, opt$datapath, "combine_args.rds")
 saveRDS(opt, file = arg_out_path)
 
 ### IF DEBUGGING IN RSTUDIO, UNCOMMENT THIS LINE INSTEAD OF USING OptParser
-#opt <- readRDS("/home/gmobot/GMOlabeler/combine_args.rds")
-#opt$output_dir <- "/home/gmobot/GMOGUI/output/gmodetector_out/gmolabeler_logic_outputs/output/"
+opt <- readRDS("/media/gmobot/GMOdrive_A/output/gmodetector_out/gmolabeler_logic_outputs/Elements_25/GTNEC_GWAS_poplar_transformation_necrotic_test/day5/Chl/combine_args.rds")
+opt$output_dir <- gsub("/mnt/", "/media/gmobot/GMOdrive_A/", opt$output_dir)
 
 datapath <- paste0(opt$output_dir, opt$datapath, "stats.csv")
 output <- fread(datapath)
+
+output <- output[which(suppressWarnings(as.numeric(as.character(output$segment_hex))) != 0), ]
 
 #### First do for all segments, combine all
 all_segment_npixel_table <- aggregate(n_pixels_passing_threshold ~ filename + grid_item, data = output, FUN=sum)
@@ -65,7 +67,7 @@ if (!is.null(opt$keypath) && nzchar(opt$keypath)) {
     which(segmentation_key$Tissue %in% exclude_tissues_vector)]
 } else {
   segmentation_key <- data.table(Tissue=character(), hex_code=character(), Integer=numeric())
-  hexes_to_exclude <- c("CC0000")
+  hexes_to_exclude <- c("CC0000", "800000")
 }
 
 # Subset the data.table using this logical mask

@@ -116,7 +116,7 @@ opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser);
 print(opt)
 
-#opt <- readRDS("/media/gmobot/GMOdrive_A/output/gmodetector_out//gmolabeler_stats_plots/Elements_25/GTNEC_GWAS_poplar_transformation_necrotic_test/day9///GFP/gridplot_args.rds")
+#opt <- readRDS("/media/gmobot/GMOdrive_A/output/gmodetector_out//gmolabeler_stats_plots/Elements_25/GTNEC_GWAS_poplar_transformation_necrotic_test/day5///GFP/gridplot_args.rds")
 #opt$outdir <- "/media/gmobot/GMOdrive_A/output/gmodetector_out/"
 #opt$randomization_datasheet_path <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$randomization_datasheet_path)
 #opt$`samples-pre-labeling` <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$`samples-pre-labeling`)
@@ -384,6 +384,7 @@ parse_trayplateID <- function(name_being_parsed){
       # Changed in v0.19 along with patch above
       col <- str_split_fixed(basename(file_path_sans_ext(data_to_parse)),
                              "_", ndelimiters)[ndelimiters]
+      col <- gsub("_rgb", "", col)
       row_col <- paste0(row, "_", col)
       ID <- dictionary[which(dictionary$row_column == row_col),]$ID
       # Debugging lines added in v0.19
@@ -731,6 +732,11 @@ for (j in 1:nrow(pixel_demographics)){
       new_column_name
 }
 
+if(length(intersect(randomization_datasheet$ID, output$ID)) == 0){
+  message("Error: No matching sample IDs between missing explant output and randomization datasheet")
+  quit(status=1)
+}
+
 for (i in 1:nrow(randomization_datasheet)){
     for (j in 1:nrow(pixel_demographics)){
         column_of_interest <- paste0('n_transgenic_',
@@ -740,12 +746,12 @@ for (i in 1:nrow(randomization_datasheet)){
           output$ID==randomization_datasheet$ID[i] &
             output$segment_hex == pixel_demographics$Tissue[j])]))
 
-        # print(paste0('Total transgenic explants on plate ',
-        #             randomization_datasheet$ID[i],
-        #             ' and tissue ',
-        #             pixel_demographics$Tissue[j],
-        #             ' is ',
-        #             total_transgenic))
+        print(paste0('Total transgenic explants on plate ',
+                    randomization_datasheet$ID[i],
+                    ' and tissue ',
+                    pixel_demographics$Tissue[j],
+                    ' is ',
+                    total_transgenic))
 
         randomization_datasheet[i, eval(column_of_interest)] <- total_transgenic
 
