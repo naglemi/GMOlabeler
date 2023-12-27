@@ -1,8 +1,8 @@
 # GMOlabeler
-Python/R code for cross-analyzing hyperspectral regression and (RGB) semantic segmentation results to calculate statistics for development of specific transgenic plant tissues
+Python/R code for cross-analyzing fluorescence and semantic segmentation results to calculate statistics for development of specific transgenic plant tissues
 
 ## Description
-This repository contains R and Python scripts used in the final module of the [GMOdetector workflow](https://github.com/naglemi/GMOnotebook) for studying plant transformation with complementary RGB and fluorescent hyperspectral datasets. The scripts contained here are used to cross-reference semantic segmentation masks (with tissues segmented according to their type, e.g. callus and shoot) with weights from regression of fluorescent hyperspectral images over known components (e.g. chlorophyll and GFP) obtained from [CubeGLM](https://github.com/naglemi/gmodetector_py). Outputs produced include summary statistics of fluorescent protein signal in specific tissues, and p-values for the effects on these statistics by experimental treatment, genotype and interactions thereof.
+This repository contains R and Python scripts used in the final module of the [GMOdetector workflow](https://github.com/naglemi/GMOnotebook) for studying plant transformation with complementary semantic segmentation (RGB or reflectance-hyperspectral) and fluorescence-hyperspectral datasets. The scripts contained here are used to cross-reference semantic segmentation masks (with tissues segmented according to their type, e.g. callus and shoot) with weights from regression of fluorescent hyperspectral images over known components (e.g. chlorophyll and GFP) obtained from [CubeGLM](https://github.com/naglemi/gmodetector_py). Outputs produced include summary statistics of fluorescent protein signal in specific tissues, and p-values for the effects on these statistics by experimental treatment, genotype and interactions thereof.
 
 These scripts are not intended for use outside of the [GMOdetector workflow](https://github.com/naglemi/GMOnotebook). This readme will provide a basic explanation of how these scripts are used in this workflow.
 
@@ -23,7 +23,7 @@ python main.py \
 The parameters for this function are described in documentation for the [GMOdetector workflow](https://github.com/naglemi/GMOnotebook):
 - [Preparing alignment for grid and finding grid borders](https://github.com/naglemi/GMOnotebook/tree/master/1_Decide_parameters/2_Align_and_crop_parameters)
 - [Fluorescent protein settings](https://github.com/naglemi/GMOnotebook/blob/master/1_Decide_parameters/3_Other_parameters/3_Hyperspectral_settings.ipynb)
-- Producing spreadsheet of corresponding RGB images, segmentation masks and hyperspectral weights ([Main workflow](https://github.com/naglemi/GMOnotebook/blob/master/2a_Deploy_workflow/GMOdetector_template_v0.62.ipynb), section "Prepare sample datasheet input")
+- Producing spreadsheet of corresponding RGB or reflectance-hyperspectral images, segmentation masks and fluorescence-hyperspectral weights ([Main workflow](https://github.com/naglemi/GMOnotebook/blob/master/2a_Deploy_workflow/GMOdetector_template_v0.62.ipynb), section "Prepare sample datasheet input")
 
 To read `docstring` documentation for parameters in this Python script, enter Python, load the function and enter `help(main)`.
 
