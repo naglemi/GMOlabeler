@@ -116,11 +116,11 @@ opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser);
 print(opt)
 
-# opt <- readRDS("/media/gmobot/GMOdrive_A/output/gmodetector_out//gmolabeler_stats_plots/Elements_25/GTNEC_GWAS_poplar_transformation_necrotic_test/day5///GFP/gridplot_args.rds")
-# opt$outdir <- "/media/gmobot/GMOdrive_A/output/gmodetector_out/"
-# opt$randomization_datasheet_path <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$randomization_datasheet_path)
-# opt$`samples-pre-labeling` <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$`samples-pre-labeling`)
-# opt$MissingList <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$MissingList)
+opt <- readRDS("/media/gmobot/GMOdrive_A/output/gmodetector_out//gmolabeler_stats_plots/Elements_25/GTNEC_GWAS_poplar_transformation_necrotic_test/day5///GFP/gridplot_args.rds")
+opt$outdir <- "/media/gmobot/GMOdrive_A/output/gmodetector_out/"
+opt$randomization_datasheet_path <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$randomization_datasheet_path)
+opt$`samples-pre-labeling` <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$`samples-pre-labeling`)
+opt$MissingList <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$MissingList)
 
 # opt$keypath <- "/home/gmobot/GMOGUI/euc_cubeschool_a1-v4_cpua2.key.csv"
 
@@ -1314,14 +1314,14 @@ if(opt$debug == TRUE) print("Saved summary_stats_by_plate.csv")
 
 # Signal summary stats
 
-colnames(combined_data) <- gsub("filename", "filename.x",
-                                colnames(combined_data))
+names(combined_data) <-
+  gsub("filename\\.x\\.x|filename\\.x", "filename", names(combined_data))
 
 explant_data <- cbind(combined_data$ID,
                       combined_data$grid_item,
                       combined_data$Genotype_ID,
                       combined_data$`Treatment name`,
-                      combined_data$filename.x,
+                      combined_data$filename,
                       combined_data$segment_hex,
                       combined_data$segment_present,
                       combined_data$mean_signal,
