@@ -116,14 +116,12 @@ opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser);
 print(opt)
 
-#opt <- readRDS("/media/gmobot/GMOdrive_A/output/gmodetector_out//gmolabeler_stats_plots/Elements_25/GTNEC_GWAS_poplar_transformation_necrotic_test/day5///GFP/gridplot_args.rds")
-#opt$outdir <- "/media/gmobot/GMOdrive_A/output/gmodetector_out/"
-#opt$randomization_datasheet_path <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$randomization_datasheet_path)
-#opt$`samples-pre-labeling` <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$`samples-pre-labeling`)
-#opt$MissingList <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$MissingList)
-#opt <- gsub("/mnt/drives/", "/media/gmobot/", opt)
+# opt <- readRDS("/media/gmobot/GMOdrive_A/output/gmodetector_out//gmolabeler_stats_plots/Elements_25/GTNEC_GWAS_poplar_transformation_necrotic_test/day5///GFP/gridplot_args.rds")
+# opt$outdir <- "/media/gmobot/GMOdrive_A/output/gmodetector_out/"
+# opt$randomization_datasheet_path <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$randomization_datasheet_path)
+# opt$`samples-pre-labeling` <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$`samples-pre-labeling`)
+# opt$MissingList <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$MissingList)
 
-# opt$`samples-pre-labeling` <- gsub("/mnt/Elements_24/", "/media/gmobot/Elements_24/Elements_24/", opt$`samples-pre-labeling`)
 # opt$keypath <- "/home/gmobot/GMOGUI/euc_cubeschool_a1-v4_cpua2.key.csv"
 
 #setwd("/home/michael/GMOlabeler/")
@@ -166,7 +164,7 @@ if(opt$keypath != FALSE){
     print("Assuming default tissues for original poplar model because not specified with `keypath`")
     pixel_demographics = data.frame(cbind(c('Shoot', 'Callus', 'Stem', 'All_tissue',
                                             'All_regenerated_tissue', 'Background'),
-                                          c('00CC11', '0006CC', 'CC0000',
+                                          c('008000', '000080', '800000',
                                             'All_tissue',
                                             'All_regenerated_tissue', '000000'),
                                           c('green', 'blue', 'red',
@@ -174,7 +172,8 @@ if(opt$keypath != FALSE){
     colnames(pixel_demographics) <- c('Tissue', 'hex_code', 'color')
 }
 
-output <- fread(datapath)
+output <- fread(datapath, colClasses = list(character = "segment_hex"))
+output$segment_hex <- str_pad(output$segment_hex, width = 6, pad = "0")
 output <- output[which(!is.na(grid_item)), ]
 
 if(opt$debug == TRUE){
@@ -659,6 +658,8 @@ if(opt$debug == TRUE){
 
 if (opt$MissingList %!in% c(FALSE, 0, NA, "None", "none")) {
 
+  missing
+
   missing_explant_data_tidy$filename <- gsub("_rgb", "",
                                              missing_explant_data_tidy$filename)
 
@@ -815,6 +816,7 @@ for (j in 1:nrow(pixel_demographics)){
 for (i in 1:nrow(randomization_datasheet)){
     for (j in 1:nrow(pixel_demographics)){
         column_of_interest <- paste0('n_', pixel_demographics$Tissue[j])
+
 
         total_tissue <- sum(
           na.omit(output$segment_present[which(
