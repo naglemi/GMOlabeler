@@ -116,11 +116,11 @@ opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser);
 print(opt)
 
-opt <- readRDS("/media/gmobot/GMOdrive_A/output/gmodetector_out//gmolabeler_stats_plots/Elements_25/GTNEC_GWAS_poplar_transformation_necrotic_test/day5///GFP/gridplot_args.rds")
-opt$outdir <- "/media/gmobot/GMOdrive_A/output/gmodetector_out/"
-opt$randomization_datasheet_path <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$randomization_datasheet_path)
-opt$`samples-pre-labeling` <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$`samples-pre-labeling`)
-opt$MissingList <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$MissingList)
+#opt <- readRDS("/media/gmobot/GMOdrive_A/output/gmodetector_out//gmolabeler_stats_plots/Elements_25/GTNEC_GWAS_poplar_transformation_necrotic_test/day5///GFP/gridplot_args.rds")
+#opt$outdir <- "/media/gmobot/GMOdrive_A/output/gmodetector_out/"
+#opt$randomization_datasheet_path <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$randomization_datasheet_path)
+#opt$`samples-pre-labeling` <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$`samples-pre-labeling`)
+#opt$MissingList <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$MissingList)
 
 # opt$keypath <- "/home/gmobot/GMOGUI/euc_cubeschool_a1-v4_cpua2.key.csv"
 
