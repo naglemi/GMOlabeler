@@ -35,13 +35,13 @@ arg_out_path <- paste0(opt$output_dir, opt$datapath, "combine_args.rds")
 saveRDS(opt, file = arg_out_path)
 
 ### IF DEBUGGING IN RSTUDIO, UNCOMMENT THIS LINE INSTEAD OF USING OptParser
-# opt <- readRDS("/media/gmobot/GMOdrive_A/output/gmodetector_out/gmolabeler_logic_outputs/Elements_25/GTNEC_GWAS_poplar_transformation_necrotic_test/day5/Chl/combine_args.rds")
-# opt$output_dir <- gsub("/mnt/", "/media/gmobot/GMOdrive_A/", opt$output_dir)
+#opt <- readRDS("/media/gmobot/GMOdrive_A/output/gmodetector_out/gmolabeler_logic_outputs/Elements_25/GTNEC_GWAS_poplar_transformation_necrotic_test/day5/Chl/combine_args.rds")
+#opt$output_dir <- gsub("/mnt/", "/media/gmobot/GMOdrive_A/", opt$output_dir)
 
 datapath <- paste0(opt$output_dir, opt$datapath, "stats.csv")
 output <- fread(datapath, colClasses = list(character = "segment_hex"))
 
-output <- output[which(suppressWarnings(as.numeric(as.character(output$segment_hex))) != 0), ]
+output <- output[!(output$segment_hex == 0 | as.character(output$segment_hex) %in% c("0", "#000000")), ]
 
 #### First do for all segments, combine all
 all_segment_npixel_table <- aggregate(n_pixels_passing_threshold ~ filename + grid_item, data = output, FUN=sum)
