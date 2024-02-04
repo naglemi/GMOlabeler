@@ -116,11 +116,12 @@ opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser);
 print(opt)
 
-#opt <- readRDS("/media/gmobot/GMOdrive_A/output/gmodetector_out//gmolabeler_stats_plots/Elements_25/GTNEC_GWAS_poplar_transformation_necrotic_test/day5///GFP/gridplot_args.rds")
-#opt$outdir <- "/media/gmobot/GMOdrive_A/output/gmodetector_out/"
-#opt$randomization_datasheet_path <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$randomization_datasheet_path)
-#opt$`samples-pre-labeling` <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$`samples-pre-labeling`)
-#opt$MissingList <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$MissingList)
+# opt <- readRDS("/media/gmobot/GMOdrive_A/output/gmodetector_out//gmolabeler_stats_plots/Elements_25/GTNEC_GWAS_poplar_transformation_necrotic_test/day12/GFP/gridplot_args.rds")
+# opt$outdir <- "/media/gmobot/GMOdrive_A/output/gmodetector_out/"
+# opt$randomization_datasheet_path <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$randomization_datasheet_path)
+# opt$`samples-pre-labeling` <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$`samples-pre-labeling`)
+# opt$MissingList <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$MissingList)
+# opt$keypath <- gsub("/mnt/models/hyperspectral/", "/media/gmobot/GMOdrive_A/models/hyperspectral/", opt$keypath)
 
 # opt$keypath <- "/home/gmobot/GMOGUI/euc_cubeschool_a1-v4_cpua2.key.csv"
 
@@ -219,13 +220,36 @@ if (opt$MissingList %in% c(FALSE, 0, NA, "None", "none")) {
 # Need to exclude missing explant data for non-final imags of plates that
 #  were re-imaged.
 
+missing_explant_data$image_indices <-
+  sub("([^_]+)_.*_(\\d+)_(\\d+)_rgb.*", "\\1_\\2_\\3",
+      missing_explant_data$image_name)
+
+missing_explant_data$Timestamp <- sub(".*_(\\d{6})_\\d+_\\d+_\\d+_rgb.*", "\\1",
+                                      missing_explant_data$image_name)
+
+# Sort by Timestamp in ascending order so that the last occurrence is the most recent
+missing_explant_data <- missing_explant_data[order(missing_explant_data$Timestamp),]
+
+
+# Mark duplicates based on Tray_Row_Col identifier, keeping the last occurrence
+missing_explant_data <- missing_explant_data[!duplicated(missing_explant_data$image_indices,
+                                                         fromLast = TRUE), ]
+
+
 samples_pre_label <- fread(opt$`samples-pre-labeling`)
 nonredundant_rgb_list <- basename(
   gsub("_processed", "", samples_pre_label$rgb))
+nonredundant_rgb_list <- gsub("png.png", "jpg", nonredundant_rgb_list)
 nonredundant_rgb_list <- gsub("png", "jpg", nonredundant_rgb_list)
+
+nonredundant_rgb_list <- gsub("_\\d{6}_", "_timestamp_", nonredundant_rgb_list)
+missing_explant_data$image_name <- gsub("_\\d{6}_", "_timestamp_",  missing_explant_data$image_name)
 
 missing_explant_data <- missing_explant_data[which(
   missing_explant_data$image_name %in% nonredundant_rgb_list), ]
+
+missing_explant_data$image_indices <-
+  missing_explant_data$Timestamp <- NULL
 
 missing_explant_data_tidy <- pivot_longer(
   data= missing_explant_data,
@@ -290,12 +314,12 @@ output <- merge(x = output,
 
 # Remove explants labeled as missing or contaminated
 
-if(opt$debug == TRUE){
-  cat("\n")
-  print(paste0("After merging but before removing missing/contminated",
-               " explants, merged output has ",
-               nrow(output), " rows."))
-}
+# if(opt$debug == TRUE){
+#   cat("\n")
+#   print(paste0("After merging but before removing missing/contminated",
+#                " explants, merged output has ",
+#                nrow(output), " rows."))
+# }
 
 output$present[is.na(output$present)] <- "Y"
 
@@ -318,19 +342,19 @@ missing_explant_data[missing_explant_data=='C'] <- 0
 missing_explant_data[missing_explant_data=='P'] <- 0
 missing_explant_data[missing_explant_data=='M'] <- 0
 
-if(opt$debug == TRUE){
-  cat("\n")
-  print(paste0(
-    "After removing the missing/contaminated explants, merged output has ",
-    nrow(output)))
-}
-
-if(opt$debug == TRUE){
-  cat("\n")
-  print(paste0("After processing GMOlabeler output to merge with missing explant",
-               "data, Head of data (w/ first 5 col): "))
-  output[1:5,1:5]
-}
+# if(opt$debug == TRUE){
+#   cat("\n")
+#   print(paste0(
+#     "After removing the missing/contaminated explants, merged output has ",
+#     nrow(output)))
+# }
+#
+# if(opt$debug == TRUE){
+#   cat("\n")
+#   print(paste0("After processing GMOlabeler output to merge with missing explant",
+#                "data, Head of data (w/ first 5 col): "))
+#   output[1:5,1:5]
+# }
 
 #' Given macroPhor Array output filename, parse out tray and plate IDs
 #'
@@ -780,14 +804,14 @@ for (i in 1:nrow(randomization_datasheet)){
     }
 }
 
-if(opt$debug == TRUE){
-  print(paste0("Maximum # grid positions with transgenic stem in any plate: ",
-               max(na.omit(randomization_datasheet$n_transgenic_Stem))))
-  print(paste0("Maximum # grid positions with transgenic callus in any plate: ",
-               max(na.omit(randomization_datasheet$n_transgenic_Callus))))
-  print(paste0("Maximum # grid positions with transgenic shoot in any plate: ",
-               max(na.omit(randomization_datasheet$n_transgenic_Shoot))))
-}
+# if(opt$debug == TRUE){
+#   print(paste0("Maximum # grid positions with transgenic stem in any plate: ",
+#                max(na.omit(randomization_datasheet$n_transgenic_Stem))))
+#   print(paste0("Maximum # grid positions with transgenic callus in any plate: ",
+#                max(na.omit(randomization_datasheet$n_transgenic_Callus))))
+#   print(paste0("Maximum # grid positions with transgenic shoot in any plate: ",
+#                max(na.omit(randomization_datasheet$n_transgenic_Shoot))))
+# }
 
 # Calculate total ---------------------------------------------------------
 ## Now calculate all of each tissue whether transgenic or not
@@ -1421,17 +1445,21 @@ all_linreg_plate_level <- data.frame()
 
 for(i in 1:length(traits)){
 
-  if(opt$debug == TRUE){
-    print(traits[i])
-    if(length(levels(factor(randomization_datasheet[, get(traits[i])]))) == 1){
+  #if(opt$debug == TRUE){
+  print(traits[i])
 
-      print("Single value")
-      print(length(levels(factor(randomization_datasheet[, get(traits[i])]))))
-      next # Skip trait if everything has same value
-    }
-    print(paste0("Trait has values: "))
+  factors <- levels(factor(randomization_datasheet[, get(traits[i])]))
+  factors <- factors[!grepl("NaN", factors)]
+
+  if(length(factors) == 1){
+
+    print("Single value")
     print(levels(factor(randomization_datasheet[, get(traits[i])])))
+    next # Skip trait if everything has same value
   }
+  print(paste0("Trait has values: "))
+  print(levels(factor(randomization_datasheet[, get(traits[i])])))
+  #}
 
   if(length(levels(factor(randomization_datasheet$Block))) > 1){
     formula <- paste(traits[i], "~ Treatment_name + Block")
@@ -1498,7 +1526,10 @@ all_linreg_explant_level <- data.frame()
 colnames(combined_data) <- gsub(" ", "_",
                                 colnames(combined_data))
 
-for(i in 1:(nrow(pixel_demographics)-1)){
+pixel_demographics <- pixel_demographics[which(
+  pixel_demographics$Tissue != "background" & pixel_demographics$Tissue != "Background"), ]
+
+for(i in 1:(nrow(pixel_demographics))){
 
   data_subset <- combined_data[which(
     combined_data$segment_hex == pixel_demographics$Tissue[i]),]
