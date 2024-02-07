@@ -116,14 +116,12 @@ opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser);
 print(opt)
 
-# opt <- readRDS("/media/gmobot/GMOdrive_A/output/gmodetector_out//gmolabeler_stats_plots/Elements_25/GTNEC_GWAS_poplar_transformation_necrotic_test/day12/GFP/gridplot_args.rds")
+# opt <- readRDS("/media/gmobot/GMOdrive_A/output/gmodetector_out//gmolabeler_stats_plots/Elements_25/GTNEC_GWAS_poplar_transformation_necrotic_test/day5///GFP/gridplot_args.rds")
 # opt$outdir <- "/media/gmobot/GMOdrive_A/output/gmodetector_out/"
 # opt$randomization_datasheet_path <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$randomization_datasheet_path)
 # opt$`samples-pre-labeling` <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$`samples-pre-labeling`)
 # opt$MissingList <- gsub("/mnt/drives/Elements", "/media/gmobot/Elements", opt$MissingList)
 # opt$keypath <- gsub("/mnt/models/hyperspectral/", "/media/gmobot/GMOdrive_A/models/hyperspectral/", opt$keypath)
-
-# opt$keypath <- "/home/gmobot/GMOGUI/euc_cubeschool_a1-v4_cpua2.key.csv"
 
 #setwd("/home/michael/GMOlabeler/")
 #opt$debug <- 1
@@ -1451,9 +1449,9 @@ for(i in 1:length(traits)){
   factors <- levels(factor(randomization_datasheet[, get(traits[i])]))
   factors <- factors[!grepl("NaN", factors)]
 
-  if(length(factors) == 1){
+  if(length(factors) <= 2){
 
-    print("Single value")
+    print("Single or binary values. Skip model for this trait.")
     print(levels(factor(randomization_datasheet[, get(traits[i])])))
     next # Skip trait if everything has same value
   }
@@ -1513,6 +1511,9 @@ for(i in 1:length(traits)){
   all_anova_plate_level <- rbind.fill(all_anova_plate_level, anova_perms)
   all_linreg_plate_level <- rbind.fill(all_linreg_plate_level, linreg_perms)
 }
+
+fwrite(all_anova_plate_level, "ANOVA_plate_stats.csv")
+fwrite(all_linreg_plate_level, "Linreg_plate_stats.csv")
 
 traits <- c("mean_signal",
             "max_signal",
@@ -1610,9 +1611,6 @@ for(i in 1:(nrow(pixel_demographics))){
 
 finish_time <- proc.time() - ptm
 if(opt$debug == TRUE) print(finish_time)
-
-fwrite(all_anova_plate_level, "ANOVA_plate_stats.csv")
-fwrite(all_linreg_plate_level, "Linreg_plate_stats.csv")
 
 fwrite(all_anova_explant_level, "ANOVA_explant_statistics.csv")
 fwrite(all_linreg_explant_level, "Linreg_explant_statistics.csv")
